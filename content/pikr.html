@@ -1,0 +1,607 @@
+<!--meta
+{
+  "slug": "pikr",
+  "repo": "pikr",
+  "title": "pikr — vim-modal picker / launcher. Rofi replacement in Rust.",
+  "description": "pikr — vim-modal picker / launcher. Rofi replacement with hjkl keys. dmenu, XDG .desktop launcher, $PATH runner. Wayland + X11. Floem-rendered. Single binary, no daemon, no telemetry.",
+  "keywords": "pikr, picker, launcher, rofi, rofi replacement, dmenu, drun, wayland, layer-shell, x11, vim, modal, hjkl, rust, floem, kryptic",
+  "accent": "#ff79c6",
+  "og_image": "/pikr/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#modes", "label": "modes" },
+    { "href": "#keys", "label": "keys" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/pikr/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/pikr", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "pikr",
+    "description": "Vim-modal picker / launcher. Rofi replacement with hjkl keys. dmenu, XDG .desktop launcher, $PATH runner. Wayland + X11.",
+    "url": "https://www.kryptic.sh/pikr/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/pikr",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #ff79c6;
+    --accent-dim: #7a3a60;
+    --accent-ink: #1a0613;
+    --accent-hover: #ff9cd4;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(255, 121, 198, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(187, 154, 247, 0.06),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      #d4a3ff 60%,
+      #ffd1ec 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* picker mock */
+  .term {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    margin: 40px 0 0;
+  }
+  .term .chrome {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #0d1016;
+    border-bottom: 1px solid var(--border);
+  }
+  .term .chrome .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .term .chrome .dot.r {
+    background: #ff5f56;
+  }
+  .term .chrome .dot.y {
+    background: #ffbd2e;
+  }
+  .term .chrome .dot.g {
+    background: #27c93f;
+  }
+  .term .titlebar {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    pointer-events: none;
+  }
+  .term pre .ok {
+    color: var(--accent);
+  }
+  .term pre .cm {
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+  .term .screen {
+    background: #0a0c10;
+    color: #d6e0ee;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 320px;
+  }
+  .picker-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #0d1016;
+  }
+  .picker-input .prompt {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .picker-input .query {
+    color: var(--fg);
+    flex: 1;
+  }
+  .picker-input .cur {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--accent);
+    vertical-align: middle;
+    animation: blink 1s steps(1) infinite;
+  }
+  .picker-input .count {
+    color: var(--fg-muted);
+    font-size: 12px;
+  }
+  .picker-list {
+    padding: 8px 0 0;
+  }
+  .picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 18px;
+    color: var(--fg);
+  }
+  .picker-row.sel {
+    background: rgba(255, 121, 198, 0.12);
+    border-left: 3px solid var(--accent);
+    padding-left: 15px;
+    color: var(--accent);
+  }
+  .picker-row .icon {
+    color: var(--fg-muted);
+    width: 18px;
+    text-align: center;
+  }
+  .picker-row .name .hl {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .picker-row .desc {
+    color: var(--fg-muted);
+    font-size: 12px;
+    margin-left: auto;
+  }
+  .term .statusbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #0d1016;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+  .mode-badge {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    padding: 5px 14px;
+    letter-spacing: 0.08em;
+  }
+
+  /* mode cards */
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .mode {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .mode .sym {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mode .name {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 4px 0 8px;
+  }
+  .mode .meta {
+    font-size: 13.5px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+  .mode code {
+    color: var(--fg);
+    background: var(--panel);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="pikr">…</span></span>
+    <span class="badge warn">pre-release</span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust + floem</span>
+    <span class="badge">Wayland + X11</span>
+  </div>
+  <h1>
+    Pick anything.<br />
+    <span class="grad">hjkl-fast.</span>
+  </h1>
+  <p class="tagline">Vim-modal picker. Rofi replacement.</p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    dmenu over stdin. XDG <code>.desktop</code> launcher.
+    <code>$PATH</code> runner. Wayland layer-shell incoming. One binary, no
+    daemon, no phone-home.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/pikr"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why pikr ↓</a>
+  </div>
+
+  <div class="term">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <div class="titlebar">pikr — drun</div>
+    </div>
+    <div class="screen">
+      <div class="picker-input">
+        <span class="prompt">›</span>
+        <span class="query">fir<span class="cur"></span></span>
+        <span class="count">3 / 412</span>
+      </div>
+      <div class="picker-list">
+        <div class="picker-row sel">
+          <span class="icon">▶</span>
+          <span class="name"><span class="hl">Fir</span>efox</span>
+          <span class="desc">web browser</span>
+        </div>
+        <div class="picker-row">
+          <span class="icon"></span>
+          <span class="name"><span class="hl">Fir</span>e Studio</span>
+          <span class="desc">scene graph editor</span>
+        </div>
+        <div class="picker-row">
+          <span class="icon"></span>
+          <span class="name">Firmware <span class="hl">Fi</span>nder</span>
+          <span class="desc">device tools</span>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="mode-badge">NORMAL</span>
+      <span
+        >j/k move · / search · &lt;CR&gt; launch · : ex · &lt;Esc&gt; quit</span
+      >
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>A launcher shaped like a vim picker.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — KEYS</div>
+      <h4>Vim-modal navigation</h4>
+      <p>
+        Normal/Insert split. <kbd>j</kbd>/<kbd>k</kbd> move. <kbd>gg</kbd>/<kbd
+          >G</kbd
+        >
+        snap. <kbd>Ctrl-d</kbd>/<kbd>Ctrl-u</kbd> half-page.
+        <kbd>/</kbd> search. <kbd>:</kbd> ex command. Count prefixes work —
+        <kbd>5j</kbd>
+        jumps five rows.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — FUZZY</div>
+      <h4>nucleo matcher</h4>
+      <p>
+        The same fuzzy matcher Helix ships. Match positions highlight inline so
+        you can see why a row scored where it did.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — MODES</div>
+      <h4>dmenu / drun / run</h4>
+      <p>
+        Three modes day one, behind a single <code>Mode</code> trait. Pipe stdin
+        and consume stdout; or launch a desktop app; or exec from
+        <code>$PATH</code>. Switch live with <kbd>:drun</kbd>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — RENDER</div>
+      <h4>floem + winit fork</h4>
+      <p>
+        Built on
+        <a href="https://crates.io/crates/floem" target="_blank" rel="noopener"
+          >floem</a
+        >
+        (vello GPU render, reactive views). Wayland layer-shell support lands
+        through a winit fork — proper overlay, exclusive zone, keyboard capture.
+        Upstream PR planned.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — SINGLE BIN</div>
+      <h4>No daemon. No state.</h4>
+      <p>
+        Cold-start picker, exit on accept. No background service. Config is pure
+        TOML, never auto-written, in-memory defaults when absent.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — WAYLAND + X11</div>
+      <h4>Native, not wrapped</h4>
+      <p>
+        No GTK, no Qt, no Electron. wlroots-style layer-shell on Wayland;
+        override-redirect window on X11. Same binary, same UX.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — STDIN</div>
+      <h4>Pipe anything</h4>
+      <p>
+        <code>echo "$(ls)" | pikr --dmenu</code> picks a line. Stdout is clean —
+        wire pikr into shell pipelines the way you'd wire fzf.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — DETACHED</div>
+      <h4>Launches don't leak</h4>
+      <p>
+        Spawned processes are detached (setsid + double-fork). pikr's exit
+        doesn't kill the launched app; the launched app doesn't capture pikr's
+        file descriptors.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — PRIVACY</div>
+      <h4>Zero telemetry</h4>
+      <p>
+        No analytics, no update pings, no usage stats. No network I/O in the
+        core binary. Local config, local defaults.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="modes">
+  <h2>modes</h2>
+  <h3>Three sources of selectable rows, one keymap.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    Modes implement a single <code>Mode</code> trait:
+    <code>entries() -&gt; Vec&lt;Entry&gt;</code> +
+    <code>select(&amp;Entry)</code>. Picker state, key dispatch, matcher, and UI
+    are mode-agnostic. Plugin host (WASM / dyn) is tracked as a followup.
+  </p>
+
+  <div class="modes">
+    <div class="mode">
+      <div class="sym">--dmenu / -d</div>
+      <div class="name">dmenu</div>
+      <div class="meta">
+        Read newline-separated entries from stdin, print the accepted selection
+        to stdout. Drop-in for shell pipelines. Compatible with rofi's
+        <code>-dmenu</code> flag.
+      </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show drun</div>
+      <div class="name">drun</div>
+      <div class="meta">
+        Scan <code>$XDG_DATA_DIRS/applications/*.desktop</code>, honor
+        <code>Hidden</code> / <code>NoDisplay</code>, parse
+        <code>Exec=</code> per the freedesktop spec. Launch detached.
+      </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show run</div>
+      <div class="name">run</div>
+      <div class="meta">
+        Walk <code>$PATH</code>, dedupe executable names, exec the selection in
+        a fresh process group. No shell interpolation of untrusted input.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="keys">
+  <h2>keys</h2>
+  <h3>The bindings you already know.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    Two modes, vim semantics. Normal is the default — typing
+    <kbd>i</kbd> enters Insert (free-form text into the query).
+    <kbd>Esc</kbd> returns to Normal.
+  </p>
+
+  <div class="group-label">normal mode · navigation</div>
+  <div class="keys">
+    <div class="key-row">
+      <kbd>j</kbd> / <kbd>k</kbd>
+      <span>move down / up</span>
+    </div>
+    <div class="key-row">
+      <kbd>gg</kbd> / <kbd>G</kbd>
+      <span>top / bottom</span>
+    </div>
+    <div class="key-row">
+      <kbd>Ctrl-d</kbd> / <kbd>Ctrl-u</kbd>
+      <span>half-page down / up</span>
+    </div>
+    <div class="key-row">
+      <kbd>5j</kbd>
+      <span>count prefix · jump 5 rows</span>
+    </div>
+  </div>
+
+  <div class="group-label">normal mode · action</div>
+  <div class="keys">
+    <div class="key-row">
+      <kbd>i</kbd>
+      <span>enter insert mode</span>
+    </div>
+    <div class="key-row">
+      <kbd>/</kbd>
+      <span>start search</span>
+    </div>
+    <div class="key-row">
+      <kbd>:</kbd>
+      <span>ex command line</span>
+    </div>
+    <div class="key-row">
+      <kbd>Enter</kbd>
+      <span>accept selection</span>
+    </div>
+    <div class="key-row">
+      <kbd>Esc</kbd>
+      <span>cancel</span>
+    </div>
+  </div>
+
+  <div class="group-label">ex commands</div>
+  <div class="keys">
+    <div class="key-row">
+      <kbd>:dmenu</kbd>
+      <span>switch to dmenu mode</span>
+    </div>
+    <div class="key-row">
+      <kbd>:drun</kbd>
+      <span>switch to drun mode</span>
+    </div>
+    <div class="key-row">
+      <kbd>:run</kbd>
+      <span>switch to run mode</span>
+    </div>
+    <div class="key-row">
+      <kbd>:q</kbd>
+      <span>quit</span>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>
+    Prebuilt binaries on every release; Homebrew tap for macOS; AUR for Arch;
+    Alpine .apk; build from source anywhere else.
+  </h3>
+  <p class="install-note" style="margin-top: 20px">
+    Each tagged release will ship x86_64 + aarch64 Linux (glibc 2.28), Alpine
+    .apk, Windows MSVC, and macOS (Intel + Apple Silicon) binaries with SHA-256
+    sidecars. macOS via Homebrew tap. Arch via AUR.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/pikr/releases"
+      target="_blank"
+      rel="noopener"
+      >releases →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/pikr"
+      target="_blank"
+      rel="noopener"
+      >source on github ↗</a
+    >
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <div class="titlebar">pikr — Arch Linux (AUR)</div>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S pikr-bin
+<span class="ok">$</span> paru -S pikr-bin
+<span class="ok">$</span> pikr</pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <div class="titlebar">pikr — macOS (Homebrew)</div>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install kryptic-sh/tap/pikr
+<span class="ok">$</span> pikr</pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <div class="titlebar">pikr — Alpine Linux</div>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> <span class="cm"># download .apk from releases page, then:</span>
+<span class="ok">$</span> apk add --allow-untrusted pikr-*.apk
+<span class="ok">$</span> pikr</pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <div class="titlebar">pikr — from source</div>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> git clone https://github.com/kryptic-sh/pikr
+<span class="ok">$</span> cd pikr
+<span class="ok">$</span> cargo build --release
+
+<span class="cm"># binary in target/release/pikr</span></pre>
+  </div>
+</section>
+<!--/body-->

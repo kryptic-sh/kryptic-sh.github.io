@@ -1,0 +1,607 @@
+<!--meta
+{
+  "slug": "inbx",
+  "repo": "inbx",
+  "title": "inbx — modal-vim email client in Rust",
+  "description": "inbx — modal-vim email client. Multi-provider: IMAP/SMTP, Gmail XOAUTH2, Microsoft Graph, JMAP. Maildir + SQLite. hjkl-powered composer.",
+  "keywords": "inbx, vim email, modal email client, rust email, mutt alternative, neomutt, IMAP, JMAP, gmail XOAUTH2, microsoft graph, maildir, sqlite, ratatui, kryptic",
+  "accent": "#f7768e",
+  "og_image": "/inbx/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#providers", "label": "providers" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/inbx/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/inbx", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "inbx",
+    "description": "Modal-vim email client. IMAP, Gmail, Outlook, JMAP. Rust workspace.",
+    "url": "https://www.kryptic.sh/inbx/",
+    "applicationCategory": "CommunicationApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/inbx",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #f7768e;
+    --accent-dim: #6e2a3a;
+    --accent-ink: #2a0a14;
+    --accent-hover: #fa9aae;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(247, 118, 142, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(187, 154, 247, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--purple) 60%,
+      var(--blue) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* terminal mock */
+  .term {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    margin: 40px 0 0;
+  }
+  .term .chrome {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #0d1016;
+    border-bottom: 1px solid var(--border);
+  }
+  .term .chrome .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .term .chrome .dot.r {
+    background: #ff5f56;
+  }
+  .term .chrome .dot.y {
+    background: #ffbd2e;
+  }
+  .term .chrome .dot.g {
+    background: #27c93f;
+  }
+  .term .chrome .title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    pointer-events: none;
+  }
+  .term pre .ok {
+    color: var(--accent);
+  }
+  .term pre .cm {
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+  .term .body {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    background: #0d1016;
+    padding: 0;
+    min-height: 300px;
+  }
+  .term .folders {
+    display: flex;
+    gap: 14px;
+    padding: 8px 14px;
+    background: #11141a;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg-muted);
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .term .folders .f {
+    color: var(--fg-muted);
+  }
+  .term .folders .f.active {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 4px;
+    margin-bottom: -5px;
+  }
+  .term .folders .f .count {
+    color: var(--orange);
+  }
+  .mlist {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+  }
+  .mlist li {
+    display: grid;
+    grid-template-columns: 28px 24px 14ch 1fr 70px;
+    gap: 10px;
+    padding: 4px 14px;
+    align-items: baseline;
+  }
+  .mlist li.sel {
+    background: #1a2138;
+  }
+  .mlist .hint {
+    display: inline-block;
+    background: var(--orange);
+    color: #2a1a0a;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .mlist .flag {
+    color: var(--fg-muted);
+    text-align: center;
+  }
+  .mlist .flag.unread {
+    color: var(--accent);
+  }
+  .mlist .flag.star {
+    color: var(--orange);
+  }
+  .mlist .from {
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mlist .from.unread {
+    color: var(--fg);
+    font-weight: 700;
+  }
+  .mlist .subj {
+    color: var(--fg-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mlist .subj .tag {
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 0 5px;
+    border-radius: 3px;
+    margin-right: 6px;
+  }
+  .mlist .subj .tag.gh {
+    background: #1a2538;
+    color: #8aa9d6;
+  }
+  .mlist .subj .tag.work {
+    background: #3a2a1a;
+    color: var(--orange);
+  }
+  .mlist .when {
+    color: var(--fg-muted);
+    font-size: 12px;
+    text-align: right;
+  }
+  .term .cmdline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: #0d1016;
+    border-top: 1px solid var(--border);
+    color: var(--fg-dim);
+  }
+  .mode-badge {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    padding: 5px 14px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  .mode-badge.hint {
+    background: var(--orange);
+    color: #2a1a0a;
+  }
+  .cmdline .info {
+    flex: 1;
+    font-size: 12px;
+  }
+  .cmdline .acct {
+    color: var(--green);
+    font-size: 12px;
+  }
+
+  /* provider cards */
+  .providers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .prov {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .prov .name {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .prov .how {
+    font-size: 13px;
+    color: var(--fg-dim);
+  }
+
+  @media (max-width: 640px) {
+    .mlist li {
+      grid-template-columns: 28px 22px 1fr 60px;
+    }
+    .mlist .subj {
+      display: none;
+    }
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="inbx">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust TUI + GUI</span>
+  </div>
+  <h1>
+    Modal-vim<br />
+    <span class="grad">email.</span>
+  </h1>
+  <p class="tagline">
+    IMAP, SMTP, Gmail, Outlook, JMAP. One client, every inbox.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    Maildir on disk. SQLite index. hjkl-powered composer.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/inbx"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why inbx ↓</a>
+  </div>
+
+  <div class="term">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">inbx — me@fastmail.com</span>
+    </div>
+    <div class="body">
+      <div class="folders">
+        <span class="f active">INBOX <span class="count">12</span></span>
+        <span class="f">Sent</span>
+        <span class="f">Drafts <span class="count">2</span></span>
+        <span class="f">Archive</span>
+        <span class="f">Spam</span>
+        <span class="f">[Gmail]/All</span>
+      </div>
+      <ul class="mlist">
+        <li class="sel">
+          <span class="hint">a</span>
+          <span class="flag unread">●</span>
+          <span class="from unread">GitHub</span>
+          <span class="subj"
+            ><span class="tag gh">PR</span>kryptic-sh/inbx #42 — wire IMAP IDLE
+            socket</span
+          >
+          <span class="when">2m</span>
+        </li>
+        <li>
+          <span class="hint">s</span>
+          <span class="flag star">★</span>
+          <span class="from unread">Linus T.</span>
+          <span class="subj">Re: Maildir layout — looks fine, ship it</span>
+          <span class="when">14m</span>
+        </li>
+        <li>
+          <span class="hint">d</span>
+          <span class="flag unread">●</span>
+          <span class="from unread">Fastmail</span>
+          <span class="subj"
+            ><span class="tag">JMAP</span>You have 3 new messages</span
+          >
+          <span class="when">1h</span>
+        </li>
+        <li>
+          <span class="hint">f</span>
+          <span class="flag">·</span>
+          <span class="from">cron daemon</span>
+          <span class="subj">[backup] nightly snapshot complete (124 GB)</span>
+          <span class="when">3h</span>
+        </li>
+        <li>
+          <span class="hint">g</span>
+          <span class="flag">·</span>
+          <span class="from">Stripe</span>
+          <span class="subj"
+            ><span class="tag work">work</span>Receipt for invoice
+            #INV-2026-0418</span
+          >
+          <span class="when">yest</span>
+        </li>
+        <li>
+          <span class="hint">h</span>
+          <span class="flag">·</span>
+          <span class="from">rust-announce</span>
+          <span class="subj">Rust 1.95.0 released — let-chains stabilized</span>
+          <span class="when">2d</span>
+        </li>
+      </ul>
+    </div>
+    <div class="cmdline">
+      <span class="mode-badge hint">HINT</span>
+      <span class="info">press a letter to open · esc to cancel</span>
+      <span class="acct">● fastmail (idle)</span>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>An email client shaped like vim, not Outlook.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — INPUT</div>
+      <h4>Modal everything</h4>
+      <p>
+        Normal/insert/visual modes in the message list, the reader, and the
+        composer. Real motions, real text objects, real ex commands.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — SELECT</div>
+      <h4>Hint mode</h4>
+      <p>
+        Press <kbd>f</kbd>, every visible message gets a label. Type the label,
+        you're in the thread. No j-spamming.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — PROVIDERS</div>
+      <h4>Multi-provider, one client</h4>
+      <p>
+        IMAP/SMTP, Gmail XOAUTH2, Microsoft Graph, JMAP. One config, every
+        account. Provider abstracted behind a trait.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — STORAGE</div>
+      <h4>Maildir + SQLite + tantivy</h4>
+      <p>
+        On-disk Maildir per account. SQLite index in WAL mode (TUI + sync hold
+        the DB concurrently). tantivy full-text index for search. Offline-first.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — COMPOSE</div>
+      <h4>hjkl-powered composer</h4>
+      <p>
+        Composer embeds <a href="/hjkl/">hjkl</a> — the same modal editor.
+        Headers and body share one FSM. MIME built with mail-builder.
+        <kbd>&lt;Space&gt;t</kbd> opens a template picker; PGP key lookup runs
+        inline.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — FOLDERS</div>
+      <h4>Multi-folder sync · friendly names</h4>
+      <p>
+        Each cycle syncs every server folder; IMAP IDLE / JMAP push triggers a
+        full re-sync. <code>[Gmail]/Trash</code> renders as <code>Trash</code>,
+        <code>\Noselect</code> virtual parents hidden. Two-line message rows:
+        sender on top, subject below.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — DAEMON</div>
+      <h4>inbx-sync IPC daemon</h4>
+      <p>
+        Optional <code>inbx-sync</code> daemon (or
+        <code>inbx sync</code> subcommand) runs the IDLE / fetch / indexing loop
+        out of process. TUI auto-detects via unix-socket IPC; falls back to
+        in-process sync when the daemon isn't running.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — DAV</div>
+      <h4>CalDAV + CardDAV + Sieve</h4>
+      <p>
+        Two-way CalDAV via <code>inbx cal put|delete|rsvp</code>. CardDAV
+        auto-push on contact upsert. ManageSieve overlay caches the session
+        across list/get/put. Etag-aware delta fetches.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — PGP</div>
+      <h4>PGP — gpg or local keys</h4>
+      <p>
+        Per-account <code>pgp.key_source</code> picks between the system GnuPG
+        keyring or inbx-managed keys on disk. Composer signs and encrypts
+        inline.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">10 — SECURITY</div>
+      <h4>TLS or nothing</h4>
+      <p>
+        Implicit TLS or STARTTLS only. Never falls through to plaintext. Remote
+        content blocked by default. HTML sanitized via ammonia. Keyring backend
+        selected per platform — no mock-keystore fallback.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="providers">
+  <h2>providers</h2>
+  <h3>Whatever you use, inbx talks to it.</h3>
+  <div class="providers">
+    <div class="prov">
+      <div class="name">IMAP + SMTP</div>
+      <div class="how">
+        Fastmail, Proton Bridge, dovecot, iCloud, Yahoo, Yandex. IMAP IDLE for
+        push.
+      </div>
+    </div>
+    <div class="prov">
+      <div class="name">Gmail / Workspace</div>
+      <div class="how">
+        IMAP + SMTP via XOAUTH2. Auth-code flow with refresh tokens in the OS
+        keyring.
+      </div>
+    </div>
+    <div class="prov">
+      <div class="name">Outlook / M365</div>
+      <div class="how">
+        OAuth2 today, Microsoft Graph (<code>/me/messages</code>,
+        <code>/me/sendMail</code>) tomorrow. Tenant-aware.
+      </div>
+    </div>
+    <div class="prov">
+      <div class="name">JMAP</div>
+      <div class="how">
+        Fastmail, Stalwart. Fewer round-trips, push native. Preferred when the
+        server speaks it.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Prebuilt binaries on every tagged release.</h3>
+  <p class="install-note">
+    macOS via Homebrew tap, Arch via AUR, Alpine .apk, or grab a prebuilt
+    binary. Linux (x86_64) — .tar.gz. macOS (Apple Silicon) — .tar.gz. Windows
+    (x64) — .zip. SHA-256 sidecars on every artifact. More targets land as the
+    workspace stabilises.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/inbx/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/inbx/releases"
+      target="_blank"
+      rel="noopener"
+      >all releases ↗</a
+    >
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">inbx — macOS (Homebrew)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install kryptic-sh/tap/inbx
+<span class="ok">$</span> inbx</pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">inbx — Arch Linux (AUR)</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S inbx-bin
+<span class="ok">$</span> paru -S inbx-bin
+
+<span class="cm"># installs inbx + inbx-sync to /usr/bin/, auto-tracks tagged releases</span></pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">inbx — Alpine Linux</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> <span class="cm"># download .apk from releases page, then:</span>
+<span class="ok">$</span> apk add --allow-untrusted inbx-*.apk
+<span class="ok">$</span> inbx</pre>
+  </div>
+  <div class="term install-sample">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">inbx — from source</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> git clone https://github.com/kryptic-sh/inbx
+<span class="ok">$</span> cd inbx
+<span class="ok">$</span> cargo build --release
+
+<span class="cm"># binaries in target/release/{inbx,inbx-sync}</span></pre>
+  </div>
+</section>
+<!--/body-->

@@ -1,0 +1,491 @@
+<!--meta
+{
+  "slug": "",
+  "title": "kryptic.sh — native, vim-shaped, Rust-built tools",
+  "description": "Native software tools for people who never left the terminal. Vim-shaped, Rust-built. No Electron. No JVM. No bullshit.",
+  "keywords": "kryptic, vim, rust, terminal, tui, sql client, browser, modal editor, picker, launcher, rofi, sqeel, buffr, hjkl, inbx, hodl, pikr, gpur, hrdr, infr",
+  "accent": "#ff9e64",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#projects", "label": "projects" },
+    { "href": "#principles", "label": "principles" },
+    { "href": "https://github.com/kryptic-sh", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "kryptic.sh",
+    "description": "Native software tools for people who never left the terminal. Vim-shaped, Rust-built.",
+    "url": "https://www.kryptic.sh/",
+    "logo": "https://www.kryptic.sh/og-image.png",
+    "sameAs": ["https://github.com/kryptic-sh"]
+  }
+}
+meta-->
+<!--head-->
+<style>
+  body {
+    background-image:
+      radial-gradient(
+        circle at 15% 0%,
+        rgba(255, 158, 100, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 85% 15%,
+        rgba(122, 162, 247, 0.06),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 50% 60%,
+        rgba(187, 154, 247, 0.04),
+        transparent 50%
+      );
+  }
+  /* projects grid */
+  .projects {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    .projects {
+      grid-template-columns: 1fr;
+    }
+  }
+  .proj {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 22px 22px 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.15s,
+      border-color 0.15s;
+  }
+  .proj::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--c, var(--accent));
+  }
+  .proj:hover {
+    transform: translateY(-2px);
+    border-color: var(--c, var(--accent));
+  }
+  .proj.sqeel {
+    --c: var(--green);
+  }
+  .proj.buffr {
+    --c: var(--blue);
+  }
+  .proj.hjkl {
+    --c: var(--purple);
+  }
+  .proj.inbx {
+    --c: var(--pink);
+  }
+  .proj.hodl {
+    --c: var(--teal);
+  }
+  .proj.pikr {
+    --c: var(--magenta);
+  }
+  .proj.gpur {
+    --c: var(--gold);
+  }
+  .proj.hrdr {
+    --c: var(--accent);
+  }
+  .proj.infr {
+    --c: var(--keyword);
+  }
+  .proj-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 12px;
+  }
+  .proj-name {
+    font-family: var(--mono);
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--c, var(--accent));
+    letter-spacing: -0.01em;
+  }
+  .proj-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+  }
+  .proj-tag {
+    color: var(--fg);
+    font-size: 15px;
+    margin: 0 0 12px;
+  }
+  .proj-desc {
+    color: var(--fg-dim);
+    font-size: 14px;
+    margin: 0 0 18px;
+    flex: 1;
+  }
+  .proj-links {
+    display: flex;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .proj-links a {
+    color: var(--c, var(--accent));
+  }
+  .proj-links a.muted {
+    color: var(--fg-muted);
+  }
+  .proj-links a.muted:hover {
+    color: var(--c, var(--accent));
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● 9 projects</span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+  </div>
+  <h1>
+    Native tools.<br />
+    <span class="grad">Vim-shaped. Rust-built.</span>
+  </h1>
+  <p class="tagline">Software for people who never left the terminal.</p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    No Electron. No JVM. No webview wrappers. No telemetry. Just tools.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#projects">browse projects ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">~/kryptic — ls</span>
+    </div>
+    <pre><span class="ok">$</span> ls -la ~/kryptic
+<span class="cm"># native tools, one ethos, many surfaces</span>
+
+<span class="dim">drwx</span>  <span class="c-green">sqeel/</span>   <span class="dim">SQL client · MySQL/PG/SQLite/DuckDB</span>  <span class="ok" data-version="sqeel" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-blue">buffr/</span>   <span class="dim">vim browser · CEF + blink-cdp</span>        <span class="ok" data-version="buffr" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-purple">hjkl/</span>    <span class="dim">modal editor + vim engine · Rust</span>     <span class="ok" data-version="hjkl" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-pink">inbx/</span>    <span class="dim">email · IMAP/JMAP/Graph + CalDAV</span>     <span class="ok" data-version="inbx" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-teal">hodl/</span>    <span class="dim">light crypto wallet · TUI + ratatui</span>  <span class="ok" data-version="hodl" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-magenta">pikr/</span>    <span class="dim">vim-modal picker · rofi replacement</span>  <span class="ok" data-version="pikr" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-orange">gpur/</span>    <span class="dim">btop-style GPU monitor · TUI</span>         <span class="ok" data-version="gpur" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-orange">hrdr/</span>    <span class="dim">agentic coding harness · herder</span>      <span class="ok" data-version="hrdr" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-purple">infr/</span>    <span class="dim">LLM inference engine · Vulkan</span>        <span class="ok" data-version="infr" data-pad="13">wip</span>
+
+<span class="ok">$</span> cat principles.txt
+<span class="cm"># native rust · modal editing · mouse + keyboard · zero telemetry</span></pre>
+  </div>
+</header>
+
+<section id="projects">
+  <h2>projects</h2>
+  <h3>One ethos. Many surfaces.</h3>
+  <div class="projects">
+    <article class="proj sqeel">
+      <div class="proj-head">
+        <span class="proj-name">sqeel</span>
+        <span class="proj-status" data-version="sqeel">…</span>
+      </div>
+      <p class="proj-tag">Vim-native SQL client.</p>
+      <p class="proj-desc">
+        MySQL · Postgres · SQLite · DuckDB (CSV / Parquet queries out of the
+        box). Terminal (ratatui) and native GUI (iced) from one core. Per-file
+        TOML connections, OS-keyring credentials, sqls LSP, tree-sitter
+        highlighting, query-history fuzzy picker.
+      </p>
+      <div class="proj-links">
+        <a href="/sqeel/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/sqeel"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj buffr">
+      <div class="proj-head">
+        <span class="proj-name">buffr</span>
+        <span class="proj-status" data-version="buffr">…</span>
+      </div>
+      <p class="proj-tag">Vim-inspired browser.</p>
+      <p class="proj-desc">
+        Native, GPU-accelerated. Two backends behind one
+        <code>BrowserEngine</code> trait — CEF for legacy parity, blink-cdp
+        (headless Chromium over CDP) for sandboxed isolation; per-domain rules
+        pick the engine per tab. Modal browsing, hint-mode, ex-style command
+        palette, find-in-page, IME, PiP.
+      </p>
+      <div class="proj-links">
+        <a href="/buffr/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/buffr"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj hjkl">
+      <div class="proj-head">
+        <span class="proj-name">hjkl</span>
+        <span class="proj-status" data-version="hjkl">…</span>
+      </div>
+      <p class="proj-tag">Modal editor + vim engine.</p>
+      <p class="proj-desc">
+        Vim-modal terminal editor — multi-buffer, fuzzy file/buffer/grep
+        pickers, lazygit-adjacent <code>&lt;leader&gt;g</code> git surface,
+        runtime tree-sitter grammar loading via hjkl-bonsai, backend-agnostic
+        <code>hjkl-theme</code> stack, marks / macros / dot-repeat /
+        <code>@:</code> last-ex repeat. Same vim FSM (<code>hjkl-vim</code>)
+        drives sqeel, buffr, and inbx.
+      </p>
+      <div class="proj-links">
+        <a href="/hjkl/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/hjkl"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj inbx">
+      <div class="proj-head">
+        <span class="proj-name">inbx</span>
+        <span class="proj-status" data-version="inbx">…</span>
+      </div>
+      <p class="proj-tag">Modal-vim email client.</p>
+      <p class="proj-desc">
+        IMAP/SMTP, Gmail XOAUTH2, Microsoft Graph, JMAP — one client, every
+        inbox. Maildir + SQLite (WAL) + tantivy. Multi-folder sync with optional
+        <code>inbx-sync</code> IPC daemon. CalDAV + CardDAV + ManageSieve. PGP
+        via gpg or local keys. Composer powered by hjkl.
+      </p>
+      <div class="proj-links">
+        <a href="/inbx/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/inbx"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj hodl">
+      <div class="proj-head">
+        <span class="proj-name">hodl</span>
+        <span class="proj-status" data-version="hodl">…</span>
+      </div>
+      <p class="proj-tag">Light crypto wallet, TUI.</p>
+      <p class="proj-desc">
+        ratatui UI, BIP-39 seed, BIP-32/44 derivation. Bitcoin · ETH · BSC ·
+        Monero · NavCoin · LTC · DOGE · BCH. ERC-20 token reads on Ethereum +
+        BSC. Optional OS-keyring vault auto-unlock. TOFU cert pinning on every
+        Electrum endpoint. Local keys, encrypted at rest. Never phones home.
+      </p>
+      <div class="proj-links">
+        <a href="/hodl/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/hodl"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj pikr">
+      <div class="proj-head">
+        <span class="proj-name">pikr</span>
+        <span class="proj-status" data-version="pikr">…</span>
+      </div>
+      <p class="proj-tag">Vim-modal picker / launcher.</p>
+      <p class="proj-desc">
+        Rofi replacement with hjkl keys. dmenu over stdin, XDG
+        <code>.desktop</code> drun, <code>$PATH</code> run. Floem-rendered with
+        Wayland layer-shell incoming via a winit fork. Normal/insert modal
+        split, vim motions, fuzzy match via nucleo. Single binary, no daemon, no
+        telemetry.
+      </p>
+      <div class="proj-links">
+        <a href="/pikr/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/pikr"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj gpur">
+      <div class="proj-head">
+        <span class="proj-name">gpur</span>
+        <span class="proj-status" data-version="gpur">…</span>
+      </div>
+      <p class="proj-tag">btop-style GPU monitor, TUI.</p>
+      <p class="proj-desc">
+        NVIDIA · AMD · Intel · Apple, on Linux, macOS, and Windows. Utilization,
+        VRAM, temperature, power, clocks, per-process usage — live braille
+        graphs in ratatui. Graceful degradation when a backend can't answer.
+        Single binary, no daemons.
+      </p>
+      <div class="proj-links">
+        <a href="/gpur/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/gpur"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj hrdr">
+      <div class="proj-head">
+        <span class="proj-name">hrdr</span>
+        <span class="proj-status" data-version="hrdr">…</span>
+      </div>
+      <p class="proj-tag">Agentic coding harness.</p>
+      <p class="proj-desc">
+        "Herder" — a fast agentic coding harness for OpenAI-compatible and
+        Anthropic models. TUI and native GUI from one agent core. Adaptive tool
+        set + MCP, sub-agents, persistent memory, prompt caching, guardrails
+        that hard-block foot-guns. The vim layer is hjkl, of course.
+      </p>
+      <div class="proj-links">
+        <a href="/hrdr/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/hrdr"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj infr">
+      <div class="proj-head">
+        <span class="proj-name">infr</span>
+        <span class="proj-status" data-version="infr">wip</span>
+      </div>
+      <p class="proj-tag">LLM inference engine.</p>
+      <p class="proj-desc">
+        Pure-Rust LLM inference, Vulkan-first — built to run on any mainstream
+        GPU without a CUDA toolchain. OpenAI-compatible server with tool calls
+        and SSE streaming. Backend for hrdr and anything else that speaks the
+        API.
+      </p>
+      <div class="proj-links">
+        <a href="/infr/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/infr"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="principles">
+  <h2>principles</h2>
+  <h3>What every kryptic tool agrees on.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — RUNTIME</div>
+      <h4>Native Rust</h4>
+      <p>
+        No JVM, no Node, no webview wrapper. Small binaries, instant startup,
+        predictable RSS.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — INPUT</div>
+      <h4>Vim-shaped</h4>
+      <p>
+        Modal editing as a first-class citizen. Normal/insert/visual, real
+        motions, leader chords.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — INTERACTION</div>
+      <h4>Mouse + keyboard, both</h4>
+      <p>
+        Power users get keys. Everyone else gets mice. Neither is a second-class
+        citizen.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — PRIVACY</div>
+      <h4>Zero telemetry</h4>
+      <p>
+        No analytics. No phone-home. No "anonymous" usage data. Your terminal,
+        your business.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — SHARED CORE</div>
+      <h4>One engine, many surfaces</h4>
+      <p>
+        <code>hjkl</code> drives the modal layer across every project. Same FSM,
+        TUI or GUI or browser.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — LICENSE</div>
+      <h4>MIT, all of it</h4>
+      <p>
+        Every binary, every crate, every landing page. Fork it, ship it, study
+        it. No catch.
+      </p>
+    </div>
+  </div>
+</section>
+<!--/body-->

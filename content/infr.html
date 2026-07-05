@@ -1,0 +1,385 @@
+<!--meta
+{
+  "slug": "infr",
+  "repo": "infr",
+  "title": "infr — pure-Rust LLM inference engine. Vulkan-first.",
+  "description": "infr — pure-Rust LLM inference engine, Vulkan-first. Runs Llama, Qwen2/3, Qwen3 MoE, Gemma 3/4, Qwen3.5, and DiffusionGemma from GGUF on any mainstream GPU without a CUDA toolchain. OpenAI-compatible server with SSE streaming and tool calls.",
+  "keywords": "infr, llm inference, inference engine, rust llm, vulkan, ash, spir-v, metal, gguf, llama, qwen, qwen3, gemma, moe, diffusion llm, openai compatible, sse streaming, tool calls, llama.cpp, huggingface, hrdr, kryptic",
+  "accent": "#c792ea",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#models", "label": "models" },
+    { "href": "#install", "label": "install" },
+    { "href": "https://github.com/kryptic-sh/infr", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "infr",
+    "description": "Pure-Rust LLM inference engine, Vulkan-first. Runs GGUF models on any mainstream GPU without a CUDA toolchain and serves an OpenAI-compatible HTTP API with SSE streaming and tool calls.",
+    "url": "https://www.kryptic.sh/infr/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/infr",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #c792ea;
+    --accent-dim: #614478;
+    --accent-ink: #1d0a2a;
+    --accent-hover: #dab6f3;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(199, 146, 234, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(122, 162, 247, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--blue) 55%,
+      var(--teal) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* serve-log mock */
+  .log-info {
+    color: var(--green);
+    font-weight: 700;
+  }
+  .sse {
+    color: var(--fg-dim);
+  }
+  .sse .field {
+    color: var(--teal);
+  }
+
+  /* model family cards */
+  .models {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .model {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .model .arch {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .model .name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 4px 0 6px;
+    color: var(--accent);
+  }
+  .model .meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="infr">wip</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+    <span class="badge">Linux · macOS</span>
+    <span class="badge warn">early WIP</span>
+  </div>
+  <h1>
+    LLM inference.<br />
+    <span class="grad">From the metal.</span>
+  </h1>
+  <p class="tagline">
+    Pure-Rust inference engine, Vulkan-first — built to run on any mainstream
+    GPU without a CUDA toolchain.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    <code>pull</code> / <code>run</code> / <code>serve</code> /
+    <code>bench</code> over one engine. OpenAI-compatible <code>/v1</code> API
+    with SSE streaming and tool calls — a local backend for
+    <a href="/hrdr/">hrdr</a>, opencode, and Claude Code CLI. The only non-Rust
+    parts are the Vulkan driver calls (<code>ash</code>) and the SPIR-V compute
+    shaders.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/infr"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why infr ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">infr — serve</span>
+    </div>
+    <pre><span class="ok">$</span> infr serve unsloth/Qwen3-14B-GGUF:Q4_K_M
+<span class="log-info">INFO</span> infr-server listening <span class="dim">addr=</span><span class="num">127.0.0.1:8080</span>
+
+<span class="ok">$</span> curl -N http://127.0.0.1:8080/v1/chat/completions \
+    -H <span class="str">'content-type: application/json'</span> \
+    -d <span class="str">'{"model":"qwen3-14b","stream":true,
+         "messages":[{"role":"user","content":"hello"}]}'</span>
+<span class="sse"><span class="field">data:</span> {"object":"chat.completion.chunk","choices":[{"delta":{"content":"Hey"}}]}</span>
+<span class="sse"><span class="field">data:</span> {"object":"chat.completion.chunk","choices":[{"delta":{"content":" there"}}]}</span>
+<span class="sse"><span class="field">data:</span> {"object":"chat.completion.chunk","choices":[{"delta":{"content":"!"}}]}</span>
+<span class="sse"><span class="field">data:</span> {"choices":[{"delta":{},"finish_reason":"stop"}]}</span>
+<span class="sse"><span class="field">data:</span> [DONE]</span></pre>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>Any mainstream GPU. One unified runner. No C++ toolchain.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — PURE</div>
+      <h4>Pure Rust</h4>
+      <p>
+        The only non-Rust parts are the GPU driver calls (Vulkan via
+        <code>ash</code>) and the compute shaders (SPIR-V). No CUDA toolchain,
+        no C++ build system.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — VULKAN</div>
+      <h4>Vulkan-first, Metal too</h4>
+      <p>
+        AMD / NVIDIA / Intel via Vulkan cooperative-matrix matmul. Apple gets a
+        native Metal backend (<code>INFR_METAL=1</code>) — simdgroup-matrix GEMM
+        + flash attention, within ~1.3–1.5× of llama.cpp Metal on M3 Pro.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — API</div>
+      <h4>OpenAI-compatible server</h4>
+      <p>
+        <code>infr serve</code> — axum + SSE.
+        <code>/v1/chat/completions</code> and <code>/v1/models</code>, streaming
+        deltas, tool calls with <code>finish_reason: "tool_calls"</code>. Works
+        with <a href="/hrdr/">hrdr</a>, opencode, and Claude Code CLI.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — MODELS</div>
+      <h4>Dense, MoE, hybrid, diffusion</h4>
+      <p>
+        Llama, Qwen2/2.5, Qwen3 (dense + MoE), Gemma 3, Gemma 4 (dense + E2B),
+        Qwen3.5/3.6 hybrid gated-DeltaNet, and DiffusionGemma block
+        text-diffusion — all on one unified runner.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — PULL</div>
+      <h4>llama.cpp-compatible refs</h4>
+      <p>
+        Model refs match llama.cpp's <code>-hf</code>:
+        <code>org/repo[:quant]</code>, quant default <code>Q4_K_M</code>. Models
+        land in the standard HuggingFace Hub cache — one download, shared with
+        llama.cpp. Chat template comes from the GGUF's own
+        <code>tokenizer.chat_template</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — BENCH</div>
+      <h4>Benchmarks you can compare</h4>
+      <p>
+        <code>infr bench</code> matches <code>llama-bench</code>'s
+        <code>-p/-n/-d/-r</code> flags; <code>infr compare</code> runs both
+        tools on coding-agent-shaped workloads. Competitive with llama.cpp at
+        long context.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — PROFILE</div>
+      <h4>Per-op GPU profiling</h4>
+      <p>
+        <code>INFR_PROF2=1</code> prints GPU timestamp-query blocks per submit,
+        tagged by op label — <code>attn_flash</code>,
+        <code>expert_gateup</code>, <code>lm_head</code>, … Sum a label for its
+        total.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — VRAM</div>
+      <h4>MoE expert CPU offload</h4>
+      <p>
+        <code>INFR_NCMOE=N</code> offloads MoE experts to the CPU for tight
+        VRAM. <code>INFR_MAX_CTX</code>, <code>INFR_MAX_NEW</code>, and
+        <code>INFR_TEMP</code> / <code>TOP_K</code> / <code>TOP_P</code> (greedy
+        at <code>TEMP=0</code>) tune the rest.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — SEAM</div>
+      <h4>Backend + loader seams</h4>
+      <p>
+        Compute sits behind a <code>Backend</code> trait — Vulkan via ash +
+        SPIR-V, native Metal via MSL, CUDA addable later. Weights behind
+        <code>WeightSource</code> — GGUF now, safetensors later.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="models">
+  <h2>models</h2>
+  <h3>Nine architectures. GGUF in, tokens out.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    All run on the Vulkan GPU backend unless noted. The chat template — turn
+    markers, system prompt — is read from the GGUF's own
+    <code>tokenizer.chat_template</code>.
+  </p>
+  <div class="models">
+    <div class="model">
+      <div class="arch">gguf · llama</div>
+      <div class="name">Llama</div>
+      <div class="meta">dense transformer</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · qwen2</div>
+      <div class="name">Qwen2 / Qwen2.5</div>
+      <div class="meta">dense · QKV bias · NEOX rope</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · qwen3</div>
+      <div class="name">Qwen3</div>
+      <div class="meta">dense · QK-norm</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · qwen3moe</div>
+      <div class="name">Qwen3 MoE</div>
+      <div class="meta">
+        softmax router · top-k experts · expert CPU offload
+      </div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · gemma3</div>
+      <div class="name">Gemma 3</div>
+      <div class="meta">SWA + QK-norm + GeGLU · dual-RoPE</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · gemma4</div>
+      <div class="name">Gemma 4 (dense)</div>
+      <div class="meta">per-layer head dims · proportional RoPE · V-norm</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · gemma4</div>
+      <div class="name">Gemma 4 E2B</div>
+      <div class="meta">
+        per-layer input embeddings / FFN widths · KV sharing
+      </div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · qwen35</div>
+      <div class="name">Qwen3.5 / Qwen3.6</div>
+      <div class="meta">hybrid gated-DeltaNet + attention · CPU + Vulkan</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · diffusion-gemma</div>
+      <div class="name">DiffusionGemma</div>
+      <div class="meta">
+        block text-diffusion MoE · entropy-bound denoise · CPU + Vulkan
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Early WIP — build from source.</h3>
+  <p class="install-note">
+    No packaged releases yet. You need a Rust toolchain and a Vulkan driver (AMD
+    / NVIDIA / Intel); on Apple, the native Metal backend is enabled with
+    <code>INFR_METAL=1</code>. <code>infr run</code> and
+    <code>infr serve</code> auto-pull the model if it isn't cached.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/infr"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/infr#readme"
+      target="_blank"
+      rel="noopener"
+      >README ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">infr — from source</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> git clone https://github.com/kryptic-sh/infr
+<span class="ok">$</span> cd infr
+<span class="ok">$</span> cargo build --release
+
+<span class="cm"># binary in target/release/infr</span></pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">infr — first run</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="cm"># terminal chat (auto-pulls the GGUF from HuggingFace)</span>
+<span class="ok">$</span> infr run unsloth/Qwen3-1.7B-GGUF:Q4_K_M "What is bash?"
+
+<span class="cm"># MoE (expert CPU offload with INFR_NCMOE=N for tight VRAM)</span>
+<span class="ok">$</span> infr run unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M "Explain MoE routing."
+
+<span class="cm"># serve the OpenAI-compatible API</span>
+<span class="ok">$</span> infr serve unsloth/Qwen3-14B-GGUF:Q4_K_M</pre>
+  </div>
+</section>
+<!--/body-->

@@ -1,0 +1,466 @@
+<!--meta
+{
+  "slug": "hrdr",
+  "repo": "hrdr",
+  "title": "hrdr — agentic coding harness. TUI + GUI. Rust.",
+  "description": "hrdr (Herder) — a fast agentic coding harness for OpenAI-compatible and Anthropic models. TUI and native GUI from one agent core. Adaptive tool set, sub-agents, persistent memory, prompt caching, guardrails that hard-block foot-guns. The vim layer is hjkl.",
+  "keywords": "hrdr, herder, agentic coding, coding agent, ai coding assistant, llm harness, openai compatible, anthropic, claude, tool calls, mcp, sub-agents, rust, tui, floem, ratatui, hjkl, infr, kryptic",
+  "accent": "#ff9e64",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#agents", "label": "agents" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/hrdr/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/hrdr", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "hrdr",
+    "description": "Agentic coding harness for OpenAI-compatible and Anthropic models. Drives a model through native tool calls to complete software-engineering tasks — TUI and native GUI from one agent core.",
+    "url": "https://www.kryptic.sh/hrdr/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/hrdr",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #ff9e64;
+    --accent-dim: #7a4a2a;
+    --accent-ink: #2a1a0a;
+    --accent-hover: #ffb98a;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(255, 158, 100, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(224, 175, 104, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--gold) 55%,
+      var(--green) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* agent-session mock */
+  .u-prompt {
+    color: var(--fg);
+    font-weight: 700;
+  }
+  .u-prompt::before {
+    content: '› ';
+    color: var(--accent);
+  }
+  .tool {
+    color: var(--blue);
+  }
+  .tool::before {
+    content: '● ';
+    color: var(--fg-muted);
+  }
+  .tool .arg {
+    color: var(--fg-dim);
+    font-weight: 400;
+  }
+  .diff-add {
+    color: var(--green);
+  }
+  .diff-del {
+    color: var(--pink);
+  }
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #0d1016;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+  .status-bar .mode-badge {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    padding: 4px 14px;
+    letter-spacing: 0.08em;
+  }
+  .status-bar .right {
+    margin-left: auto;
+  }
+
+  /* built-in agent cards */
+  .agents {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .agent {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  .agent-name {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .agent-scope {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+    margin-bottom: 10px;
+  }
+  .agent-desc {
+    color: var(--fg-dim);
+    font-size: 14px;
+    margin: 0;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="hrdr">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+    <span class="badge">Linux · macOS · Windows</span>
+  </div>
+  <h1>
+    Agentic coding<br />
+    <span class="grad">harness.</span>
+  </h1>
+  <p class="tagline">
+    Herder drives a model through native tool calls until the job is done. One
+    agent core — a terminal TUI and a native GUI.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    Provider-agnostic: any OpenAI-compatible <code>/v1</code> endpoint —
+    <a href="/infr/">infr</a>, llama.cpp, OpenAI, OpenRouter — plus a native
+    Anthropic Messages backend with prompt caching and extended thinking.
+    Adaptive tool set + MCP, sub-agents, persistent memory, guardrails that
+    hard-block foot-guns. The vim layer is <a href="/hjkl/">hjkl</a>.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/hrdr"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why hrdr ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — ~/code/api</span>
+    </div>
+    <pre><span class="u-prompt">add a --json flag to the status command</span>
+
+<span class="tool">read <span class="arg">src/cli.rs</span></span>
+<span class="tool">grep <span class="arg">"fn status" src/</span></span>
+<span class="tool">edit <span class="arg">src/cli.rs</span></span>
+  <span class="diff-del">- pub struct StatusArgs {}</span>
+  <span class="diff-add">+ pub struct StatusArgs {</span>
+  <span class="diff-add">+     /// Emit machine-readable JSON</span>
+  <span class="diff-add">+     #[arg(long)]</span>
+  <span class="diff-add">+     pub json: bool,</span>
+  <span class="diff-add">+ }</span>
+<span class="tool">bash <span class="arg">cargo test --quiet</span></span>
+  <span class="dim">test result: ok. 42 passed; 0 failed</span>
+
+<span class="c-green">✔</span> Added <span class="ok">--json</span> to the status
+command — serializes via serde_json, tests pass.</pre>
+    <div class="status-bar">
+      <span class="mode-badge">READY</span>
+      <span>Enter send · @file attach · / commands</span>
+      <span class="right">12.4k of 200k</span>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>One agent core. Every provider. Both frontends.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — PROVIDERS</div>
+      <h4>Provider-agnostic</h4>
+      <p>
+        Point it at any <code>/v1/chat/completions</code> endpoint —
+        <a href="/infr/">infr</a>, OpenAI, llama.cpp, OpenRouter. Built-in
+        presets plus custom <code>[providers.*]</code> with their own model,
+        key, and headers. Azure supported too.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — ANTHROPIC</div>
+      <h4>Native Claude backend</h4>
+      <p>
+        A native Anthropic Messages API backend, auto-selected for
+        <code>api.anthropic.com</code> — unlocking native prompt caching and
+        extended thinking, streamed to the reasoning pane.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — SURFACES</div>
+      <h4>TUI, GUI, headless</h4>
+      <p>
+        A shared UI-agnostic core (<code>hrdr-app</code>) drives the ratatui TUI
+        and the floem desktop GUI with full command parity.
+        <code>hrdr run</code> goes headless — NDJSON events for scripting and
+        CI.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — TOOLS</div>
+      <h4>Adaptive tool set</h4>
+      <p>
+        <code>read</code>, <code>write</code>, <code>edit</code>,
+        <code>patch</code>, <code>find</code>, <code>ls</code>,
+        <code>grep</code>, <code>todo</code>, <code>fetch</code>,
+        <code>search</code>, a shell — plus any MCP server's tools.
+        Presence-aware: the model is only offered tools it can actually run.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — DELEGATE</div>
+      <h4>Sub-agents</h4>
+      <p>
+        The <code>task</code> tool spawns sub-agents with their own context — in
+        parallel, or detached in the background. Cross-provider profiles let an
+        Opus main agent delegate to a cheaper model.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — MEMORY</div>
+      <h4>Persistent memory</h4>
+      <p>
+        A <code>memory</code> tool with project and global scopes — plain
+        Markdown under the XDG data dir, greppable and git-diffable. The bounded
+        index survives <code>/clear</code> and <code>/compact</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — GUARDRAILS</div>
+      <h4>Foot-guns hard-blocked</h4>
+      <p>
+        The shell mechanically rejects <code>git add -A</code>, force-push,
+        <code>reset --hard</code>, whole-tree deletes, and
+        <code>curl | sh</code> before they run. Edits refuse files the model
+        hasn't read. Add your own <code>[[guardrails]]</code> rules.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — CONTEXT</div>
+      <h4>Context under control</h4>
+      <p>
+        Prompt-cache breakpoints across turns, tool-output pruning before each
+        request, and auto-compaction when the window fills — recent turns kept
+        verbatim. All tunable in <code>config.toml</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — VIM</div>
+      <h4>The vim layer is hjkl</h4>
+      <p>
+        <code>--vim</code> swaps the plain input for a real
+        <a href="/hjkl/">hjkl</a> vim editor behind an FSM-agnostic
+        <code>EditorEngine</code> seam. TUI colors come from any hjkl theme.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <h2>agents</h2>
+  <h3>Four built-ins. Or bring your own as Markdown files.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    Selected with the <code>task</code> tool's <code>agent</code> argument,
+    <code>@name</code>-mentioned in a message, or run as the main loop with
+    <code>hrdr --agent &lt;name&gt;</code>. Agents are also discovered from
+    Markdown files — <code>.hrdr/agents/</code>, and Claude Code
+    (<code>.claude/agents/</code>) and opencode locations work as-is.
+  </p>
+  <div class="agents">
+    <div class="agent">
+      <div class="agent-name">explore</div>
+      <div class="agent-scope">read-only · proactive</div>
+      <p class="agent-desc">
+        Code investigator — read/search tools only. Traces files, types, and
+        call paths and reports back.
+      </p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">review</div>
+      <div class="agent-scope">read-only · proactive</div>
+      <p class="agent-desc">
+        Code reviewer — audits a change for bugs, edge cases, and security
+        issues, with <code>path:line</code> findings.
+      </p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">plan</div>
+      <div class="agent-scope">markdown-only writes</div>
+      <p class="agent-desc">
+        Planner — investigates read-only, then writes a step-by-step plan to
+        disk as a Markdown file.
+      </p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">general</div>
+      <div class="agent-scope">full tool access</div>
+      <p class="agent-desc">
+        Open-ended multi-step tasks — explore and modify. The default when
+        <code>task</code> names no agent.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Prebuilt binaries on every tagged release.</h3>
+  <p class="install-note">
+    Linux (gnu + musl, x86_64/aarch64), macOS (Apple Silicon + Intel), and
+    Windows binaries ship with every GitHub Release, alongside
+    <code>.deb</code>, <code>.rpm</code>, and Alpine <code>.apk</code>
+    packages. Also on crates.io, Homebrew tap, AUR, and Scoop.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/hrdr/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://aur.archlinux.org/packages/hrdr-bin"
+      target="_blank"
+      rel="noopener"
+      >AUR (hrdr-bin) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/hrdr/releases"
+      target="_blank"
+      rel="noopener"
+      >all releases ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — macOS (Homebrew)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install kryptic-sh/tap/hrdr
+<span class="ok">$</span> hrdr</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — Arch Linux (AUR)</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S hrdr-bin
+<span class="ok">$</span> hrdr</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — Windows (Scoop)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> scoop bucket add kryptic-sh https://github.com/kryptic-sh/scoop-bucket
+<span class="ok">$</span> scoop install hrdr</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — Debian / Ubuntu · Fedora</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="cm"># grab the .deb / .rpm from the latest release, then:</span>
+<span class="ok">$</span> sudo dpkg -i hrdr_*.deb
+<span class="ok">$</span> sudo rpm -i hrdr-*.rpm</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">hrdr — from source</span>
+    </div>
+    <pre class="install-code"><span class="cm"># crates.io</span>
+<span class="ok">$</span> cargo install hrdr
+
+<span class="cm"># or build from the repo</span>
+<span class="ok">$</span> git clone https://github.com/kryptic-sh/hrdr
+<span class="ok">$</span> cd hrdr
+<span class="ok">$</span> cargo build --release</pre>
+  </div>
+</section>
+<!--/body-->

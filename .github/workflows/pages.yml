@@ -1,27 +1,30 @@
 name: Pages
 
-# GitHub Pages deploy for the kryptic.sh org landing page. The site
-# advertises six sibling projects (sqeel, buffr, hjkl, inbx, hodl, pikr)
-# with their currently-released versions. Each version slot uses an
-# `__VER_<NAME>__` placeholder which this workflow substitutes with the
-# latest matching git tag fetched via the GitHub API, left-aligned and
-# space-padded to a fixed 12-char width (matching the placeholder length)
-# so the rendered `ls -la` column stays aligned regardless of
-# version-string length.
-#
-# Triggers:
-#   - daily cron (06:00 UTC) → catches releases cut elsewhere
-#   - workflow_dispatch       → manual rebuild after a release
-#   - main + index.html edits → preserves dev-time edits + version pass
+# GitHub Pages deploy for the unified kryptic.sh site. Every project page
+# lives under /<app>/ on this domain (no more per-app subdomain sites).
+# Pages are assembled from templates/ + content/ by build.py (stdlib-only
+# Python). App versions are no longer baked at build time — each page
+# fetches the latest release tag client-side from the GitHub API
+# (assets/js/site.js), so no cron rebuild is needed.
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
   workflow_dispatch: {}
   push:
     branches: [main]
     paths:
-      - 'index.html'
+      - 'content/**'
+      - 'templates/**'
+      - 'assets/**'
+      - 'public/**'
+      - 'build.py'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths:
+      - 'content/**'
+      - 'templates/**'
+      - 'assets/**'
+      - 'public/**'
+      - 'build.py'
       - '.github/workflows/pages.yml'
 
 permissions:
@@ -40,102 +43,34 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Resolve latest tag for each project
-        id: tags
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Build
+        run: python3 build.py
+
+      - name: Sanity-check output
         run: |
           set -euo pipefail
-          # latest_tag <repo> <prefix>
-          # Returns the highest semver-sorted tag matching `<prefix>*`
-          # with the prefix stripped. Empty if no tags match.
-          latest_tag() {
-            local repo="$1" prefix="$2"
-            gh api "repos/kryptic-sh/$repo/git/matching-refs/tags/$prefix" \
-              --jq '.[].ref' \
-              | sed "s|refs/tags/$prefix||" \
-              | sort -V \
-              | tail -1
-          }
-          sqeel=$(latest_tag sqeel v)
-          buffr=$(latest_tag buffr v)
-          hjkl=$(latest_tag hjkl v)
-          inbx=$(latest_tag inbx v)
-          hodl=$(latest_tag hodl v)
-          pikr=$(latest_tag pikr v)
-
-          : "${sqeel:?could not resolve sqeel tag}"
-          : "${buffr:?could not resolve buffr tag}"
-          : "${hjkl:?could not resolve hjkl tag}"
-          : "${inbx:?could not resolve inbx tag}"
-          : "${hodl:?could not resolve hodl tag}"
-          # pikr has no tagged releases yet — fall back to a pre-1.0 placeholder
-          # so the substitute step doesn't fail. Drop the default once pikr
-          # cuts v0.1.0.
-          : "${pikr:=0.0.0-pre}"
-
-          echo "sqeel=$sqeel" >> "$GITHUB_OUTPUT"
-          echo "buffr=$buffr" >> "$GITHUB_OUTPUT"
-          echo "hjkl=$hjkl"   >> "$GITHUB_OUTPUT"
-          echo "inbx=$inbx"   >> "$GITHUB_OUTPUT"
-          echo "hodl=$hodl"   >> "$GITHUB_OUTPUT"
-          echo "pikr=$pikr"   >> "$GITHUB_OUTPUT"
-          echo "Resolved: sqeel=$sqeel buffr=$buffr hjkl=$hjkl inbx=$inbx hodl=$hodl pikr=$pikr"
-
-      - name: Substitute version placeholders
-        run: |
-          set -euo pipefail
-          # Left-align + space-pad every version to a uniform 13-char
-          # width (with "v" prefix). 4-letter placeholders (`__VER_HJKL__`
-          # = 12 chars) get +1 char in their slot, but the source HTML
-          # already compensates by padding their descriptions one char
-          # shorter — net result: every line ends at the same column
-          # regardless of version-string length.
-          pad() { printf '%-13s' "v$1"; }
-          sqeel_p=$(pad "${{ steps.tags.outputs.sqeel }}")
-          buffr_p=$(pad "${{ steps.tags.outputs.buffr }}")
-          hjkl_p=$(pad "${{ steps.tags.outputs.hjkl }}")
-          inbx_p=$(pad "${{ steps.tags.outputs.inbx }}")
-          hodl_p=$(pad "${{ steps.tags.outputs.hodl }}")
-          pikr_p=$(pad "${{ steps.tags.outputs.pikr }}")
-          sed -i \
-            -e "s/__VER_SQEEL__/$sqeel_p/g" \
-            -e "s/__VER_BUFFR__/$buffr_p/g" \
-            -e "s/__VER_HJKL__/$hjkl_p/g" \
-            -e "s/__VER_INBX__/$inbx_p/g" \
-            -e "s/__VER_HODL__/$hodl_p/g" \
-            -e "s/__VER_PIKR__/$pikr_p/g" \
-            index.html
-          if grep -q "__VER_" index.html; then
-            echo "::error::Stale __VER_*__ markers remain in index.html"
-            grep -n "__VER_" index.html
+          test -f dist/index.html
+          test -f dist/CNAME
+          test -f dist/.nojekyll
+          test -f dist/assets/css/base.css
+          test -f dist/assets/js/site.js
+          for app in sqeel buffr hjkl inbx hodl pikr gpur hrdr infr; do
+            test -f "dist/$app/index.html" || { echo "::error::missing dist/$app/index.html"; exit 1; }
+          done
+          if grep -rn '{{' dist --include='*.html'; then
+            echo "::error::unsubstituted template vars in dist/"
             exit 1
           fi
-
-      - name: Assemble site
-        run: |
-          set -euo pipefail
-          # Build into /tmp to dodge the cp-into-itself trap.
-          site=/tmp/site
-          rm -rf "$site"
-          mkdir -p "$site"
-          rsync -a \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=.gitignore \
-            ./ "$site/"
-          [ -f "$site/CNAME" ] || { echo "::error::missing CNAME"; exit 1; }
-          touch "$site/.nojekyll"
-          ls -la "$site/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: /tmp/site
+          path: dist
 
   deploy:
     name: deploy to GitHub Pages
     needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment:
       name: github-pages

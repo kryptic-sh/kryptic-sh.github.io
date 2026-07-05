@@ -1,0 +1,466 @@
+<!--meta
+{
+  "slug": "gpur",
+  "repo": "gpur",
+  "title": "gpur — btop-style GPU monitor TUI. Rust + ratatui.",
+  "description": "gpur — btop-style GPU monitor for the terminal. An nvtop replacement for NVIDIA, AMD, Intel, and Apple GPUs on Linux, macOS, and Windows. Braille waveforms, per-process attribution, record/replay, theming.",
+  "keywords": "gpur, gpu monitor, nvtop, btop, tui, terminal, nvidia, amd, intel, apple silicon, nvml, amdgpu, fdinfo, ratatui, rust, gpu utilization, vram, kryptic",
+  "accent": "#e0af68",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#backends", "label": "backends" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/gpur/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/gpur", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "gpur",
+    "description": "btop-style GPU monitor for the terminal. An nvtop replacement for NVIDIA, AMD, Intel, and Apple GPUs on Linux, macOS, and Windows.",
+    "url": "https://www.kryptic.sh/gpur/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/gpur",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #e0af68;
+    --accent-dim: #6f5730;
+    --accent-ink: #241a07;
+    --accent-hover: #ecc78f;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(224, 175, 104, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(126, 231, 135, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--green) 55%,
+      var(--teal) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* gpu card mock */
+  .meter {
+    color: var(--fg-muted);
+  }
+  .throttle {
+    color: var(--red);
+    font-weight: 700;
+  }
+  .proc-hdr {
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .proc-sel {
+    background: rgba(224, 175, 104, 0.14);
+  }
+  .term-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #0d1016;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+  .term-status .mode-badge {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    padding: 4px 14px;
+    letter-spacing: 0.08em;
+  }
+  .term-status .right {
+    margin-left: auto;
+  }
+
+  /* backend cards */
+  .backends {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .backend {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .backend .plat {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .backend .name {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 4px 0 6px;
+  }
+  .backend .meta {
+    font-size: 13.5px;
+    color: var(--fg-dim);
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="gpur">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust + ratatui</span>
+    <span class="badge">Linux · macOS · Windows</span>
+    <span class="badge warn">beta</span>
+  </div>
+  <h1>
+    Every GPU.<br />
+    <span class="grad">One terminal.</span>
+  </h1>
+  <p class="tagline">
+    btop-style GPU monitor. An <code>nvtop</code> replacement that runs
+    everywhere.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    NVIDIA, AMD, Intel, and Apple GPUs on Linux, macOS, and Windows. Mirrored
+    braille waveforms, gradient meters, an nvtop-style process table with
+    per-process GPU attribution, mouse support, foldable GPU cards, and theming
+    via the hjkl stack. Single binary, no daemons.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/gpur"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why gpur ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — nvml · driver 560.35</span>
+    </div>
+    <pre><span class="dim">┌─</span> <span class="ok">0 · GeForce RTX 4080</span> <span class="dim">· PCIe 4.0@16x ─────────────────────────────┐</span>
+<span class="dim">│</span> util <span class="c-green">64%</span> <span class="meter">[</span><span class="c-green">■■■■■■■■■■■■■</span><span class="meter">·······]</span>  <span class="c-green">⣀⣠⣤⣴⣶⣷⣿⣷⣶⣤⣤⣶⣾⣿⣶⣄⣀⣀⣠⣤⣶⣷⣿</span> <span class="dim">│</span>
+<span class="dim">│</span> vram <span class="c-blue">6.3G/16G</span> <span class="meter">[</span><span class="c-blue">■■■■■■■■</span><span class="meter">············]</span>  <span class="c-blue">⠉⠛⠿⣿⣿⠿⠛⠋⠉⠉⠛⠿⣿⠿⠟⠛⠋⠉⠑⠒⠚⠛</span> <span class="dim">│</span>
+<span class="dim">│</span> temp <span class="c-orange">64°C</span>  fan <span class="dim">42%</span>  pwr <span class="c-purple">212W/320W</span>  clk <span class="dim">2505MHz</span>  enc <span class="dim">12%</span> dec <span class="dim">0%</span>  <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────────────────────┘</span>
+<span class="dim">┌─</span> <span class="ok">1 · GeForce RTX 3060</span> <span class="dim">· PCIe 3.0@8x</span> <span class="c-orange">(max 4.0@16x)</span> <span class="dim">·</span> <span class="throttle">THERMAL</span> <span class="dim">──────┐</span>
+<span class="dim">│</span> util <span class="c-green">98%</span> <span class="meter">[</span><span class="c-green">■■■■■■■■■■■■■■■■■■■■</span><span class="meter">]</span>  <span class="c-green">⣶⣷⣿⣿⣿⣾⣷⣿⣿⣿⣿⣷⣶⣾⣿⣿⣿⣿⣷⣾⣿⣿</span> <span class="dim">│</span>
+<span class="dim">│</span> temp <span class="throttle">91°C</span>  fan <span class="c-orange">100%</span>  pwr <span class="c-purple">169W/170W</span>  clk <span class="dim">1327MHz</span>              <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────────────────────┘</span>
+<span class="proc-hdr"> PID    USER    DEV  TYPE     GPU%  GPU MEM   CPU%   MEM   COMMAND</span>
+<span class="proc-sel"> 41273  mx      0    Graphic  <span class="c-green">61%</span>   <span class="c-blue">5.1 GiB</span>  12.4%  2.1G  <span class="ok">▶ game.exe</span></span>
+ 40911  mx      1    Compute  <span class="c-green">97%</span>   <span class="c-blue">9.8 GiB</span>  84.0%  6.3G  python3 train.py
+ 39882  mx      0    Graphic  <span class="c-green">2%</span>    <span class="c-blue">312 MiB</span>  1.1%   890M  Hyprland</pre>
+    <div class="term-status">
+      <span class="mode-badge">1.0s</span>
+      <span>0-9 gpu · p procs · / filter · s sort · x kill · space pause</span>
+      <span class="right">2 GPUs · nvml</span>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>nvtop's depth, btop's polish, every vendor's GPU.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — VENDORS</div>
+      <h4>NVIDIA · AMD · Intel · Apple</h4>
+      <p>
+        One binary probes NVML, amdgpu sysfs, i915/xe fdinfo, IOAccelerator, and
+        Windows PDH in order and runs the first backend that answers. No
+        per-vendor builds.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — METRICS</div>
+      <h4>The full panel</h4>
+      <p>
+        Utilization, VRAM, temperature (core / junction / memory), power +
+        limit, fan, core and memory clocks, PCIe gen/width/throughput, GTT,
+        voltage — whatever the backend exposes, rendered.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — GRAPHS</div>
+      <h4>Braille waveforms</h4>
+      <p>
+        Mirrored braille history graphs and gradient meters, live in ratatui.
+        Fonts without braille coverage fall back to
+        <code>--graphs block</code> or <code>ascii</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — PROCESSES</div>
+      <h4>Per-process attribution</h4>
+      <p>
+        nvtop-style table: PID, user, device, type, GPU%, GPU memory, CPU%, host
+        memory, command. Containerized processes get a CONTAINER column (docker
+        / podman / k8s from cgroups). Filter with <code>/</code>, sort with
+        <code>s</code>, SIGTERM/SIGKILL with <code>x</code>/<code>X</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — DEGRADE</div>
+      <h4>Survives driver resets</h4>
+      <p>
+        Backend poll failures degrade gracefully: the last snapshot stays on
+        screen with a header warning until polling recovers. A driver reset
+        won't kill the monitor.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — DIAGNOSE</div>
+      <h4>Throttle + PCIe flags</h4>
+      <p>
+        A red throttle badge appears when the GPU is thermal- or power-limited,
+        and the PCIe caption flags a link running below its maximum —
+        <code>PCIe 3.0@8x (max 4.0@16x)</code> — the classic bad-riser symptom.
+        Cards show session peaks and averages when tall enough.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — REPLAY</div>
+      <h4>Record &amp; replay</h4>
+      <p>
+        <code>gpur --log run.jsonl</code> records one JSON record per poll;
+        <code>gpur --replay run.jsonl</code> plays it back anywhere — including
+        machines with no GPU — process attribution intact. Ideal for bug
+        reports.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — SCRIPTS</div>
+      <h4>Scriptable snapshots</h4>
+      <p>
+        <code>--once</code> prints one text snapshot with no TUI;
+        <code>--json</code> emits a machine-readable snapshot for waybar /
+        polybar / monitoring; <code>--mock</code> demos the UI on any machine,
+        up to a 16-GPU rig.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — THEMES</div>
+      <h4>hjkl-theme theming</h4>
+      <p>
+        Point <code>config.toml</code> at any <a href="/hjkl/">hjkl</a>-theme
+        file — meters, waveform gradients, and highlights all derive from its
+        palette. Mouse support and foldable GPU cards included.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="backends">
+  <h2>backends</h2>
+  <h3>One trait, one impl per vendor. Probed in order.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    Probe order: nvml → amdgpu → intel → ioaccel → pdh. The AMD Linux path is
+    battle-tested on real hardware; the macOS IOKit backend returns live data;
+    Intel and Windows backends are implemented, CI-exercised, and awaiting
+    real-GPU reports.
+  </p>
+  <div class="backends">
+    <div class="backend">
+      <div class="plat">Linux · Windows</div>
+      <div class="name">nvml</div>
+      <div class="meta">
+        NVIDIA via NVML, dynamically loaded. Per-process attribution everywhere,
+        split enc/dec activity, real throttle reasons.
+      </div>
+    </div>
+    <div class="backend">
+      <div class="plat">Linux</div>
+      <div class="name">amdgpu</div>
+      <div class="meta">
+        sysfs <code>/sys/class/drm</code> + fdinfo. Unified video engine,
+        at-limit throttle heuristic, junction/memory temps, GTT for APUs.
+      </div>
+    </div>
+    <div class="backend">
+      <div class="plat">Linux</div>
+      <div class="name">intel</div>
+      <div class="meta">
+        i915/xe fdinfo engine counters (busy-ns / cycles, the same way nvtop
+        does it) + hwmon energy delta for power.
+      </div>
+    </div>
+    <div class="backend">
+      <div class="plat">macOS</div>
+      <div class="name">ioaccel</div>
+      <div class="meta">
+        IOAccelerator PerfStats via IOKit. macOS has no public per-process GPU
+        API, so the table shows device totals only.
+      </div>
+    </div>
+    <div class="backend">
+      <div class="plat">Windows</div>
+      <div class="name">pdh</div>
+      <div class="meta">
+        GPU Engine / Adapter Memory counters + DXGI — Task Manager's numbers as
+        the vendor-generic fallback. Utilization and memory only.
+      </div>
+    </div>
+    <div class="backend">
+      <div class="plat">everywhere</div>
+      <div class="name">mock</div>
+      <div class="meta">
+        Deterministic waves via <code>--mock</code>. Demo the full UI — or a
+        6-GPU rig — on a machine with no GPU at all.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>
+    crates.io, AUR, Homebrew tap, Scoop, Alpine .apk — or a prebuilt binary.
+  </h3>
+  <p class="install-note">
+    Each tagged release ships x86_64 + aarch64 Linux (glibc 2.28 and musl)
+    tarballs, .deb and .rpm packages, an Alpine .apk, a Windows x64 .zip, and
+    macOS (Apple Silicon + Intel) tarballs — SHA-256 sidecars on every artifact.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/gpur/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://aur.archlinux.org/packages/gpur-bin"
+      target="_blank"
+      rel="noopener"
+      >AUR (gpur-bin) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/gpur/releases"
+      target="_blank"
+      rel="noopener"
+      >all releases ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — crates.io</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> cargo install gpur
+<span class="ok">$</span> gpur</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — Arch Linux (AUR)</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S gpur-bin
+<span class="ok">$</span> paru -S gpur-bin</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — macOS (Homebrew)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install kryptic-sh/tap/gpur
+<span class="ok">$</span> gpur</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — Windows (Scoop)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> scoop bucket add kryptic https://github.com/kryptic-sh/scoop-bucket
+<span class="ok">$</span> scoop install kryptic/gpur</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — Alpine Linux</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="cm"># download .apk from releases page, then:</span>
+<span class="ok">$</span> apk add --allow-untrusted gpur-*.apk
+<span class="ok">$</span> gpur</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">gpur — from source</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> git clone https://github.com/kryptic-sh/gpur
+<span class="ok">$</span> cd gpur
+<span class="ok">$</span> cargo build --release
+
+<span class="cm"># no GPU handy? demo the UI anyway:</span>
+<span class="ok">$</span> gpur --mock 6</pre>
+  </div>
+</section>
+<!--/body-->

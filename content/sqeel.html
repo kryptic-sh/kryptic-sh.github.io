@@ -1,0 +1,402 @@
+<!--meta
+{
+  "slug": "sqeel",
+  "repo": "sqeel",
+  "title": "sqeel — vim-native SQL client for Postgres, MySQL, SQLite",
+  "description": "Native Rust SQL client built for speed. First-class vim bindings, MySQL/Postgres/SQLite support, runs in your terminal. No Electron. No JVM. No bullshit.",
+  "keywords": "sql client, rust sql client, vim sql client, terminal sql client, tui sql, postgres client, mysql client, sqlite client, sqeel",
+  "accent": "#7ee787",
+  "og_image": "/sqeel/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/sqeel/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/sqeel", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "sqeel",
+    "description": "Native Rust SQL client with vim bindings. Runs in your terminal. Supports MySQL, Postgres, and SQLite.",
+    "url": "https://www.kryptic.sh/sqeel/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/sqeel",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #7ee787;
+    --accent-dim: #3d7a45;
+    --accent-ink: #062109;
+    --accent-hover: #9cf0a3;
+    --number: #f78c6c;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(126, 231, 135, 0.06),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(199, 146, 234, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      #6cb4ff 60%,
+      #c792ea 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* terminal demo panes */
+  .term-body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    background: var(--panel);
+  }
+  .term-col {
+    border-right: 1px solid var(--border);
+  }
+  .term-col:last-child {
+    border-right: 0;
+  }
+  .pane-hdr {
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    background: #0d1016;
+    border-bottom: 1px solid var(--border);
+  }
+  .pane-hdr .tab {
+    display: inline-block;
+    padding: 2px 10px;
+    margin: -2px 4px -2px -4px;
+    background: var(--bg-alt);
+    color: var(--accent);
+    border-radius: 3px 3px 0 0;
+  }
+  .term-split {
+    border-top: 1px solid var(--border);
+  }
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0 6px 12px;
+    background: #0d1016;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+  .status-bar .query-badge {
+    background: #1d4ed8;
+    color: #fff;
+    font-weight: 700;
+    padding: 4px 14px;
+    letter-spacing: 0.08em;
+  }
+  @media (max-width: 680px) {
+    .term-body {
+      grid-template-columns: 1fr;
+    }
+    .term-col {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+  .fn {
+    color: #82aaff;
+  }
+  .query-badge {
+    background: #1d4ed8;
+    color: #fff;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="sqeel">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+  </div>
+  <h1>Fast, vim-native <span class="grad">SQL client.</span></h1>
+  <p class="tagline">No Electron. No JVM. No bullshit.</p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    Native Rust. Instant startup. Terminal-native. MySQL, Postgres, SQLite,
+    DuckDB.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/sqeel"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why sqeel ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">sqeel — shop</span>
+    </div>
+    <div class="term-body">
+      <div class="term-col">
+        <div class="pane-hdr">Explorer — (6)</div>
+        <pre><span class="dim">&gt;</span> analytics
+<span class="dim">&gt;</span> billing
+<span class="ok">v</span> shop
+   <span class="ok">v</span> users
+     id: <span class="kw">bigint</span>(20)
+     email: <span class="kw">varchar</span>
+     name: <span class="kw">varchar</span>
+     status: <span class="kw">varchar</span>
+     created_at: <span class="kw">timestamp</span>
+   <span class="dim">&gt;</span> orders
+   <span class="dim">&gt;</span> products
+   <span class="dim">&gt;</span> sessions
+<span class="dim">&gt;</span> mysql
+<span class="dim">&gt;</span> information_schema</pre>
+      </div>
+      <div class="term-col">
+        <div class="pane-hdr">
+          <span class="tab">scratch_001.sql</span>
+        </div>
+        <pre>select * from shop.users</pre>
+        <div class="pane-hdr term-split">Results (188 rows)</div>
+        <pre>select * from shop.users
+
+<span class="dim">id   is_active  first_name  last_name   email              status</span>
+<span class="ok">101</span>  true       Ada         Lovelace    ada@sample.com     active
+<span class="ok">102</span>  true       Grace       Hopper      grace@sample.com   active
+<span class="ok">103</span>  false      Alan        Turing      alan@sample.com    pending
+<span class="ok">104</span>  true       Linus       Torvalds    linus@sample.com   active
+<span class="ok">105</span>  false      Margaret    Hamilton    mh@sample.com      inactive</pre>
+      </div>
+    </div>
+    <div class="status-bar">
+      <span class="query-badge">NORMAL</span>
+      <span>shop :: scratch_001.sql</span>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>Everything a keyboard-driven DB jockey wants.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — CORE</div>
+      <h4>Native Rust</h4>
+      <p>
+        Instant startup. No JVM, no Node, no runtime tax. Small binary, small
+        RSS.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — INPUT</div>
+      <h4>First-class vim</h4>
+      <p>
+        Normal/insert/visual/command modes. Search, leader chords, query history
+        via <kbd>Ctrl+P</kbd>/<kbd>Ctrl+N</kbd>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — TUI</div>
+      <h4>Terminal UI</h4>
+      <p>
+        <code>sqeel</code> — ratatui terminal client. Instant startup, no
+        Electron, no JVM.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — DB</div>
+      <h4>MySQL · Postgres · SQLite · DuckDB</h4>
+      <p>
+        Powered by sqlx + duckdb-rs. Per-file TOML connections, live switcher.
+        Query CSV / Parquet directly via DuckDB (<code
+          >SELECT * FROM 'data.csv'</code
+        >).
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — SECRETS</div>
+      <h4>OS keyring credentials</h4>
+      <p>
+        Passwords land in Secret Service / Keychain / Credential Manager — never
+        plaintext on disk. <code>:migrate-secrets</code> walks existing
+        connections and moves inline passwords into the keyring.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — LSP</div>
+      <h4>sqls integration</h4>
+      <p>
+        Completions and diagnostics from any SQL LSP. Errors jump editor to
+        <code>line:col</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — SYNTAX</div>
+      <h4>tree-sitter highlighting</h4>
+      <p>Dialect-aware. Fast, accurate, no regex soup.</p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — TABS</div>
+      <h4>Editor tabs + history picker</h4>
+      <p>
+        Lazy load, 5-minute RAM eviction. Auto-save SQL buffers.
+        <kbd>&lt;leader&gt;h</kbd> opens a fuzzy picker over query history;
+        selection lands in a fresh scratch tab.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — EX</div>
+      <h4>:export · :describe · :refresh</h4>
+      <p>
+        <code>:export csv|json [path]</code> writes the active result tab to
+        disk. <code>:describe &lt;table&gt;</code> dumps dialect-aware column
+        schema. <code>:refresh</code> / <kbd>&lt;leader&gt;R</kbd> busts the
+        schema cache without reconnecting.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">10 — PANES</div>
+      <h4>tmux-aware nav</h4>
+      <p>
+        <kbd>Ctrl+HJKL</kbd> across schema / editor / results. Mouse works
+        everywhere too.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — SCHEMA</div>
+      <h4>Schema browser</h4>
+      <p>
+        Expand DB → tables → columns with types inline. Click or keyboard, fuzzy
+        search across objects.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">12 — CLI</div>
+      <h4><code>$DATABASE_URL</code> prompt</h4>
+      <p>
+        Bare <code>sqeel</code> with <code>$DATABASE_URL</code> set prompts y/N
+        (password masked) before opening the TUI. Skip the picker when your
+        shell already knows where to go.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Prebuilt binaries on every tagged release.</h3>
+  <p class="install-note">
+    macOS via Homebrew tap, Arch via AUR, Alpine via .apk, or grab a prebuilt
+    binary. Linux (x86_64, aarch64), macOS (Apple Silicon, Intel), Windows
+    (x86_64). Arch users: AUR <code>sqeel-bin</code>. SHA-256 sidecars on every
+    artifact.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/sqeel/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/sqeel/releases"
+      target="_blank"
+      rel="noopener"
+      >all releases ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">sqeel — macOS (Homebrew)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install kryptic-sh/tap/sqeel
+<span class="ok">$</span> sqeel</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">sqeel — Arch Linux (AUR)</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S sqeel-bin
+<span class="ok">$</span> paru -S sqeel-bin</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">sqeel — Alpine Linux</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="cm"># download .apk from https://github.com/kryptic-sh/sqeel/releases/latest</span>
+<span class="ok">$</span> apk add --allow-untrusted sqeel-*.apk</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">sqeel — from source</span>
+    </div>
+    <pre class="install-code"><span class="cm"># crates.io</span>
+<span class="ok">$</span> cargo install sqeel
+
+<span class="cm"># or build from the repo</span>
+<span class="ok">$</span> git clone https://github.com/kryptic-sh/sqeel
+<span class="ok">$</span> cd sqeel
+<span class="ok">$</span> cargo build --release
+
+<span class="cm"># binary in target/release/sqeel</span></pre>
+  </div>
+</section>
+<!--/body-->

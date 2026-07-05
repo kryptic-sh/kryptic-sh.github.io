@@ -1,0 +1,476 @@
+<!--meta
+{
+  "slug": "buffr",
+  "repo": "buffr",
+  "title": "buffr — vim-inspired browser. Rust + CEF.",
+  "description": "buffr — vim-inspired browser. Native, GPU-accelerated. Rust + CEF. No Electron, no JVM, no webview wrappers.",
+  "keywords": "buffr, vim browser, modal browser, rust browser, CEF, chromium, native browser, hint mode, kryptic",
+  "accent": "#7aa2f7",
+  "og_image": "/buffr/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#install", "label": "install" },
+    { "href": "https://buffr.kryptic.sh/docs/", "label": "docs" },
+    { "href": "https://github.com/kryptic-sh/buffr/blob/main/CHANGELOG.md", "label": "changelog" },
+    { "href": "https://github.com/kryptic-sh/buffr", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "buffr",
+    "description": "Vim-inspired browser. Native, GPU-accelerated. Rust + CEF.",
+    "url": "https://www.kryptic.sh/buffr/",
+    "applicationCategory": "WebBrowser",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/buffr",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #7aa2f7;
+    --accent-dim: #324a7a;
+    --accent-ink: #0a142a;
+    --accent-hover: #9bbcfa;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(122, 162, 247, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(187, 154, 247, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--purple) 60%,
+      #6cb4ff 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* browser mock — mirrors apps/buffr layout: tab strip → page → statusline */
+  .browser {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    margin: 40px 0 0;
+  }
+  /* mac-style title bar — matches the other kryptic-sh sample pages */
+  .browser .titlebar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #0a0c11;
+    border-bottom: 1px solid var(--border);
+  }
+  .browser .titlebar .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .browser .titlebar .dot.r {
+    background: #ff5f56;
+  }
+  .browser .titlebar .dot.y {
+    background: #ffbd2e;
+  }
+  .browser .titlebar .dot.g {
+    background: #27c93f;
+  }
+  .browser .titlebar .title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    pointer-events: none;
+  }
+  /* tab strip — TAB_STRIP_HEIGHT ≈ 34px */
+  .browser .tabstrip {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 4px 4px 0;
+    background: #0d1016;
+    border-bottom: 1px solid var(--border);
+    height: 34px;
+    box-sizing: border-box;
+  }
+  .browser .tab {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    background: #14171f;
+    border-radius: 4px 4px 0 0;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    min-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  .browser .tab.pinned {
+    min-width: 0;
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .browser .tab.active {
+    background: #1c2331;
+    color: var(--fg);
+  }
+  .browser .tab.active::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  .browser .viewport {
+    position: relative;
+    background: #1c2331;
+    color: #e2e6ef;
+    padding: 28px 32px;
+    min-height: 240px;
+    font-family: ui-serif, Georgia, serif;
+    line-height: 1.5;
+  }
+  .browser .viewport h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    color: #f2f4f8;
+  }
+  .browser .viewport p {
+    margin: 0 0 12px;
+    color: #b6bdcc;
+    font-size: 14px;
+  }
+  .browser .viewport .vlinks {
+    font-size: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+  .browser .viewport .vlinks .vlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .browser .viewport .vlinks .vlink a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .hint {
+    display: inline-block;
+    background: var(--orange);
+    color: #2a1a0a;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    line-height: 1.4;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  /* statusline — STATUSLINE_HEIGHT ≈ 30px. mode block left, url, right cell */
+  .browser .statusbar {
+    display: flex;
+    align-items: stretch;
+    background: #1a1f2e; /* Command mode bg — pairs with page accent */
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #eeeeee;
+    height: 30px;
+    box-sizing: border-box;
+  }
+  .browser .statusbar .url {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    color: #cfcfcf;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .browser .statusbar .url .lock {
+    color: #66e08a; /* COLOUR_CERT_SECURE */
+  }
+  .browser .statusbar .right {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 10px;
+    color: #cfcfcf;
+  }
+  .browser .statusbar .right .upd {
+    color: #e0c85a; /* COLOUR_UPDATE */
+  }
+  .mode-badge {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    padding: 0 14px;
+    letter-spacing: 0.08em;
+    display: inline-flex;
+    align-items: center;
+  }
+  .mode-badge.hint {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .mode-badge.normal {
+    background: #4ac95c; /* mode_accent(Normal) */
+    color: #0a200a;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="buffr">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust + CEF + WPE WebKit</span>
+  </div>
+  <h1>
+    Vim-inspired<br />
+    <span class="grad">browser.</span>
+  </h1>
+  <p class="tagline">
+    Native, GPU-accelerated. Rust on top of CEF or WPE WebKit — your choice, per
+    domain.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    Chromium rendering without an Electron-shaped layer above it. Two backends
+    behind one <code>BrowserEngine</code> trait, picked per tab.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/buffr"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why buffr ↓</a>
+  </div>
+
+  <div class="browser">
+    <div class="titlebar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">buffr</span>
+    </div>
+    <div class="tabstrip" aria-label="tab strip">
+      <span class="tab pinned" title="hjkl (pinned)">*</span>
+      <span class="tab active">Hacker News</span>
+      <span class="tab">github.com/kryptic-sh/buffr</span>
+      <span class="tab">MDN — KeyboardEvent</span>
+    </div>
+    <div class="viewport">
+      <h3>Hacker News</h3>
+      <p>Modal browsing, hint-mode for links, ex-style command palette.</p>
+      <div class="vlinks">
+        <span class="vlink"
+          ><span class="hint">f</span><a href="#">show comments</a></span
+        >
+        <span class="vlink"
+          ><span class="hint">d</span><a href="#">open in tab</a></span
+        >
+        <span class="vlink"
+          ><span class="hint">s</span><a href="#">save</a></span
+        >
+        <span class="vlink"
+          ><span class="hint">a</span><a href="#">archive</a></span
+        >
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="mode-badge hint">HINT</span>
+      <span class="url"
+        ><span class="lock" title="secure">●</span
+        ><span>https://news.ycombinator.com/</span></span
+      >
+      <span class="right"
+        ><span>4 matches</span><span class="upd">* upd</span
+        ><span>100%</span></span
+      >
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>A browser shaped like vim, not chrome.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — INPUT</div>
+      <h4>Modal browsing</h4>
+      <p>
+        Normal/insert/visual modes. Real motions, real text objects, real ex
+        commands.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — LINKS</div>
+      <h4>Hint mode</h4>
+      <p>
+        Press <kbd>f</kbd>, every link gets a label. Type the label, you're
+        there. No mouse needed.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — ENGINE</div>
+      <h4>Multiple backends, one trait</h4>
+      <p>
+        <code>buffr-engine</code> defines the <code>BrowserEngine</code> trait;
+        <code>buffr-cef</code> wraps Chromium Embedded Framework,
+        <code>buffr-webkit</code> drives WPE WebKit natively, with WKWebView,
+        WebView2, Blitz, and Ladybird backends alongside. Per-domain rules pick
+        the engine per tab — tab-strip badge shows <code>WK</code> or
+        <code>CE</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — GPU</div>
+      <h4>GPU-accelerated</h4>
+      <p>
+        Compositing on the GPU. Smooth scroll, fast paint, low-latency input.
+        Async render thread keeps Wayland resize backpressure honest.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — ISOLATION</div>
+      <h4>Per-engine on-disk layout</h4>
+      <p>
+        Each engine instance gets its own
+        <code>~/.cache/buffr/engines/&lt;id&gt;/</code> +
+        <code>~/.local/share/buffr/engines/&lt;id&gt;/profile/</code>. Distinct
+        cookies, cache, IndexedDB. Auto-migrates pre-0.11 profiles on first
+        launch.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — PARITY</div>
+      <h4>Permissions · downloads · find · IME · PiP</h4>
+      <p>
+        Non-CEF tabs handle geolocation/notifications/mic/camera prompts,
+        downloads with progress, <code>/</code> find-in-page, context-menu
+        hit-test, IME composition, and
+        <code>HTMLVideoElement.requestPictureInPicture</code> — same status-line
+        UX as CEF.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — INTERACTION</div>
+      <h4>Mouse + keyboard</h4>
+      <p>
+        Both, always. Power users get keys. Everyone else gets mice. Neither is
+        second-class.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — PRIVACY</div>
+      <h4>Zero telemetry</h4>
+      <p>
+        No analytics. No phone-home. <code>--private</code> mode tears down all
+        engine profiles into a per-pid temp tree on exit.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Prebuilt binaries on every tagged release.</h3>
+  <p class="install-note">
+    Linux (x86_64, aarch64) — .deb / .rpm / .tar.gz / Flatpak / Snap / AUR.
+    macOS (Apple Silicon) — .dmg. Windows (x64, arm64) — .msi. SHA-256 sidecars
+    on every artifact.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/buffr/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/buffr/releases"
+      target="_blank"
+      rel="noopener"
+      >all releases ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">buffr — Arch Linux (AUR)</span>
+    </div>
+    <pre class="install-code"><span class="ok">$</span> yay -S buffr-bin
+<span class="ok">$</span> paru -S buffr-bin</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">buffr — macOS (Homebrew)</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> brew install --cask kryptic-sh/tap/buffr</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">buffr — from source</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> git clone https://github.com/kryptic-sh/buffr
+<span class="ok">$</span> cd buffr
+<span class="ok">$</span> cargo xtask fetch-cef    <span class="cm"># vendor CEF runtime (~500 MB extracted)</span>
+<span class="ok">$</span> cargo build --release</pre>
+  </div>
+</section>
+<!--/body-->
