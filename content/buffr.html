@@ -265,19 +265,21 @@ meta-->
   <div class="badges">
     <span class="badge live">● <span data-version="buffr">…</span></span>
     <span class="badge">MIT</span>
-    <span class="badge">Rust + CEF + WPE WebKit</span>
+    <span class="badge">Rust + CEF</span>
+    <span class="badge">Wayland only</span>
   </div>
   <h1>
     Vim-inspired<br />
     <span class="grad">browser.</span>
   </h1>
   <p class="tagline">
-    Native, GPU-accelerated. Rust on top of CEF or WPE WebKit — your choice, per
-    domain.
+    Native, GPU-accelerated. Rust on top of Chromium — no Electron-shaped layer
+    above it.
   </p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
-    Chromium rendering without an Electron-shaped layer above it. Two backends
-    behind one <code>BrowserEngine</code> trait, picked per tab.
+    Rendering sits behind a <code>BrowserEngine</code> trait with per-domain
+    engine rules, so the web engine is a swappable detail rather than the
+    architecture.
   </p>
 
   <div class="cta">
@@ -357,14 +359,15 @@ meta-->
     </div>
     <div class="feat">
       <div class="icon">03 — ENGINE</div>
-      <h4>Multiple backends, one trait</h4>
+      <h4>The engine is behind a trait</h4>
       <p>
-        <code>buffr-engine</code> defines the <code>BrowserEngine</code> trait;
-        <code>buffr-cef</code> wraps Chromium Embedded Framework,
-        <code>buffr-webkit</code> drives WPE WebKit natively, with WKWebView,
-        WebView2, Blitz, and Ladybird backends alongside. Per-domain rules pick
-        the engine per tab — tab-strip badge shows <code>WK</code> or
-        <code>CE</code>.
+        <code>buffr-engine</code> defines the <code>BrowserEngine</code> trait
+        and <code>buffr-cef</code> wraps Chromium Embedded Framework — the
+        backend every release ships. <code>buffr-webkit</code> drives WPE WebKit
+        natively through the same trait (Wayland subsurface compositing, DMA-BUF
+        bridging) and is built separately since it needs
+        <code>wpewebkit-2.0</code> system deps. Per-domain rules in config
+        already route tabs to a named engine instance.
       </p>
     </div>
     <div class="feat">
@@ -390,11 +393,11 @@ meta-->
       <div class="icon">06 — PARITY</div>
       <h4>Permissions · downloads · find · IME · PiP</h4>
       <p>
-        Non-CEF tabs handle geolocation/notifications/mic/camera prompts,
-        downloads with progress, <code>/</code> find-in-page, context-menu
-        hit-test, IME composition, and
-        <code>HTMLVideoElement.requestPictureInPicture</code> — same status-line
-        UX as CEF.
+        Geolocation / notification / mic / camera prompts, downloads with
+        progress, <code>/</code> find-in-page, context-menu hit-test, IME
+        composition, and <code>HTMLVideoElement.requestPictureInPicture</code> —
+        all driven through the engine trait, so a second backend inherits the
+        same status-line UX instead of reimplementing it.
       </p>
     </div>
     <div class="feat">
@@ -422,7 +425,13 @@ meta-->
   <p class="install-note">
     Linux (x86_64, aarch64) — .deb / .rpm / .tar.gz / Flatpak / Snap / AUR.
     macOS (Apple Silicon) — .dmg. Windows (x64, arm64) — .msi. SHA-256 sidecars
-    on every artifact.
+    on every artifact. <strong>Linux needs a Wayland session</strong> — X11 is
+    not supported, and buffr exits with a clear error when
+    <code>XDG_SESSION_TYPE</code> isn't <code>wayland</code>.
+    <code>cargo install buffr</code> is <em>not</em> a supported path: the
+    crates.io crate is a stub, because CEF needs a ~150 MB runtime payload cargo
+    can't bundle. Intel Macs build from source — they were cut from the release
+    pipeline in 0.1.14, not from the code.
   </p>
   <div class="cta">
     <a

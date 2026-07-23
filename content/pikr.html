@@ -251,10 +251,9 @@ meta-->
 <header class="hero">
   <div class="badges">
     <span class="badge live">● <span data-version="pikr">…</span></span>
-    <span class="badge warn">pre-release</span>
     <span class="badge">MIT</span>
     <span class="badge">Rust + floem</span>
-    <span class="badge">Wayland + X11</span>
+    <span class="badge">Wayland (wlr-layer-shell)</span>
   </div>
   <h1>
     Pick anything.<br />
@@ -262,8 +261,8 @@ meta-->
   </h1>
   <p class="tagline">Vim-modal picker. Rofi replacement.</p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
-    dmenu over stdin. XDG <code>.desktop</code> launcher.
-    <code>$PATH</code> runner. Wayland layer-shell incoming. One binary, no
+    Seven modes — dmenu, drun, run, ssh, emoji, clipboard, calc — on a real
+    Wayland layer-shell overlay with exclusive keyboard grab. One binary, no
     daemon, no phone-home.
   </p>
 
@@ -330,8 +329,8 @@ meta-->
         >
         snap. <kbd>Ctrl-d</kbd>/<kbd>Ctrl-u</kbd> half-page.
         <kbd>/</kbd> search. <kbd>:</kbd> ex command. Count prefixes work —
-        <kbd>5j</kbd>
-        jumps five rows.
+        <kbd>5j</kbd> jumps five rows. Insert-entry motions match vim:
+        <kbd>i</kbd>, <kbd>a</kbd>, <kbd>A</kbd>, <kbd>I</kbd>.
       </p>
     </div>
     <div class="feat">
@@ -344,24 +343,31 @@ meta-->
     </div>
     <div class="feat">
       <div class="icon">03 — MODES</div>
-      <h4>dmenu / drun / run</h4>
+      <h4>Seven sources, one keymap</h4>
       <p>
-        Three modes day one, behind a single <code>Mode</code> trait. Pipe stdin
-        and consume stdout; or launch a desktop app; or exec from
-        <code>$PATH</code>. Switch live with <kbd>:drun</kbd>.
+        dmenu · drun · run · ssh · emoji · clipboard · calc, all behind a single
+        <code>Mode</code> trait. Pick with <code>--show</code>, or switch live
+        from the ex line.
       </p>
     </div>
     <div class="feat">
       <div class="icon">04 — RENDER</div>
-      <h4>floem + winit fork</h4>
+      <h4>floem + layer-shell</h4>
       <p>
         Built on
         <a href="https://crates.io/crates/floem" target="_blank" rel="noopener"
           >floem</a
         >
-        (vello GPU render, reactive views). Wayland layer-shell support lands
-        through a winit fork — proper overlay, exclusive zone, keyboard capture.
-        Upstream PR planned.
+        (vello GPU render, reactive views). Layer-shell ships today through
+        floem + winit forks — real overlay, exclusive zone, exclusive keyboard
+        grab — while
+        <a
+          href="https://github.com/lapce/floem/pull/1077"
+          target="_blank"
+          rel="noopener"
+          >lapce/floem#1077</a
+        >
+        works its way upstream.
       </p>
     </div>
     <div class="feat">
@@ -373,11 +379,12 @@ meta-->
       </p>
     </div>
     <div class="feat">
-      <div class="icon">06 — WAYLAND + X11</div>
+      <div class="icon">06 — WAYLAND</div>
       <h4>Native, not wrapped</h4>
       <p>
-        No GTK, no Qt, no Electron. wlroots-style layer-shell on Wayland;
-        override-redirect window on X11. Same binary, same UX.
+        No GTK, no Qt, no Electron. Needs a compositor advertising
+        <code>wlr-layer-shell-unstable-v1</code> — Hyprland, sway, niri, river,
+        wayfire. GNOME Mutter doesn't advertise it; X11 isn't supported at all.
       </p>
     </div>
     <div class="feat">
@@ -410,7 +417,7 @@ meta-->
 
 <section id="modes">
   <h2>modes</h2>
-  <h3>Three sources of selectable rows, one keymap.</h3>
+  <h3>Seven sources of selectable rows, one keymap.</h3>
   <p style="color: var(--fg-muted); margin: 0 0 24px">
     Modes implement a single <code>Mode</code> trait:
     <code>entries() -&gt; Vec&lt;Entry&gt;</code> +
@@ -444,6 +451,66 @@ meta-->
         Walk <code>$PATH</code>, dedupe executable names, exec the selection in
         a fresh process group. No shell interpolation of untrusted input.
       </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show ssh</div>
+      <div class="name">ssh</div>
+      <div class="meta">
+        Hosts parsed out of <code>~/.ssh/config</code> and
+        <code>~/.ssh/known_hosts</code>. Pick one, get a session.
+      </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show emoji</div>
+      <div class="name">emoji</div>
+      <div class="meta">
+        Searchable Unicode emoji picker — fuzzy-match by name, the character
+        goes to stdout.
+      </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show clipboard</div>
+      <div class="name">clipboard</div>
+      <div class="meta">
+        Recent clipboard history as rows. Pick an entry to put it back on the
+        clipboard.
+      </div>
+    </div>
+    <div class="mode">
+      <div class="sym">--show calc</div>
+      <div class="name">calc</div>
+      <div class="meta">
+        Reactive expression evaluator — the result updates as you type, no Enter
+        required until you want it.
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top: 44px">Flags for the awkward cases.</h3>
+  <div class="keys">
+    <div class="key-row">
+      <kbd>-p</kbd> / <kbd>--prompt</kbd>
+      <span>prompt text in the input row</span>
+    </div>
+    <div class="key-row">
+      <kbd>-P</kbd> / <kbd>--password</kbd>
+      <span>mask the query with ● — matcher still sees the real text</span>
+    </div>
+    <div class="key-row">
+      <kbd>--filter</kbd>
+      <span>pre-fill the query on launch (aliases: query, prefill)</span>
+    </div>
+    <div class="key-row">
+      <kbd>-e</kbd> / <kbd>--message</kbd>
+      <span>non-interactive message modal, Esc dismisses</span>
+    </div>
+    <div class="key-row">
+      <kbd>--mode</kbd>
+      <span>start in normal instead of insert</span>
+    </div>
+    <div class="key-row">
+      <kbd>--width</kbd> / <kbd>-l</kbd>
+      <span>window width in px / visible result rows</span>
     </div>
   </div>
 </section>
@@ -516,6 +583,14 @@ meta-->
       <span>switch to run mode</span>
     </div>
     <div class="key-row">
+      <kbd>:ssh</kbd> / <kbd>:emoji</kbd>
+      <span>switch to ssh / emoji mode</span>
+    </div>
+    <div class="key-row">
+      <kbd>:clipboard</kbd> / <kbd>:calc</kbd>
+      <span>switch to clipboard / calc mode</span>
+    </div>
+    <div class="key-row">
       <kbd>:q</kbd>
       <span>quit</span>
     </div>
@@ -525,13 +600,15 @@ meta-->
 <section id="install">
   <h2>install</h2>
   <h3>
-    Prebuilt binaries on every release; Homebrew tap for macOS; AUR for Arch;
-    Alpine .apk; build from source anywhere else.
+    Native packages on every tagged release — .deb, .rpm, .apk, AUR, Homebrew,
+    Scoop.
   </h3>
   <p class="install-note" style="margin-top: 20px">
-    Each tagged release will ship x86_64 + aarch64 Linux (glibc 2.28), Alpine
-    .apk, Windows MSVC, and macOS (Intel + Apple Silicon) binaries with SHA-256
-    sidecars. macOS via Homebrew tap. Arch via AUR.
+    Every tag ships x86_64 + aarch64 Linux (glibc + musl), Alpine
+    <code>.apk</code>, Debian <code>.deb</code>, Fedora/RHEL <code>.rpm</code>,
+    Windows MSVC, and macOS (Intel + Apple Silicon) binaries with SHA-256
+    sidecars. The picker itself is Wayland-only on Linux — a compositor with
+    <code>wlr-layer-shell-unstable-v1</code> is required.
   </p>
   <div class="cta">
     <a
@@ -581,13 +658,19 @@ meta-->
     <div class="chrome">
       <span class="dot r"></span><span class="dot y"></span
       ><span class="dot g"></span>
-      <div class="titlebar">pikr — Alpine Linux</div>
+      <div class="titlebar">pikr — Debian / Fedora / Alpine</div>
     </div>
     <pre
       class="install-code"
-    ><span class="ok">$</span> <span class="cm"># download .apk from releases page, then:</span>
-<span class="ok">$</span> apk add --allow-untrusted pikr-*.apk
-<span class="ok">$</span> pikr</pre>
+    ><span class="cm"># Debian / Ubuntu / Mint / Pop!_OS</span>
+<span class="ok">$</span> curl -fsSLO https://github.com/kryptic-sh/pikr/releases/latest/download/pikr_*_amd64.deb
+<span class="ok">$</span> sudo dpkg -i pikr_*_amd64.deb
+
+<span class="cm"># Fedora / RHEL / Rocky / Alma / openSUSE</span>
+<span class="ok">$</span> sudo dnf install https://github.com/kryptic-sh/pikr/releases/latest/download/pikr-*.x86_64.rpm
+
+<span class="cm"># Alpine</span>
+<span class="ok">$</span> sudo apk add --allow-untrusted pikr-*.apk</pre>
   </div>
   <div class="term install-sample">
     <div class="chrome">

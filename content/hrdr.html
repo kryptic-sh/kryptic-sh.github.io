@@ -168,7 +168,7 @@ meta-->
     <span class="badge live">● <span data-version="hrdr">…</span></span>
     <span class="badge">MIT</span>
     <span class="badge">Rust</span>
-    <span class="badge">Linux · macOS · Windows</span>
+    <span class="badge">Linux · macOS · Windows (WSL / Git Bash)</span>
   </div>
   <h1>
     Agentic coding<br />
@@ -176,7 +176,7 @@ meta-->
   </h1>
   <p class="tagline">
     Herder drives a model through native tool calls until the job is done. One
-    agent core — a terminal TUI and a native GUI.
+    agent core — a terminal TUI on top, headless underneath.
   </p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
     Provider-agnostic: any OpenAI-compatible <code>/v1</code> endpoint —
@@ -229,7 +229,7 @@ command — serializes via serde_json, tests pass.</pre>
 
 <section id="why">
   <h2>why</h2>
-  <h3>One agent core. Every provider. Both frontends.</h3>
+  <h3>One agent core. Every provider.</h3>
   <div class="grid">
     <div class="feat">
       <div class="icon">01 — PROVIDERS</div>
@@ -252,12 +252,11 @@ command — serializes via serde_json, tests pass.</pre>
     </div>
     <div class="feat">
       <div class="icon">03 — SURFACES</div>
-      <h4>TUI, GUI, headless</h4>
+      <h4>TUI or headless</h4>
       <p>
-        A shared UI-agnostic core (<code>hrdr-app</code>) drives the ratatui TUI
-        and the floem desktop GUI with full command parity.
-        <code>hrdr run</code> goes headless — NDJSON events for scripting and
-        CI.
+        A UI-agnostic core (<code>hrdr-app</code>) drives the ratatui TUI, and
+        <code>hrdr run --json</code> goes headless — NDJSON events for scripting
+        and CI, same agent underneath.
       </p>
     </div>
     <div class="feat">
@@ -265,10 +264,14 @@ command — serializes via serde_json, tests pass.</pre>
       <h4>Adaptive tool set</h4>
       <p>
         <code>read</code>, <code>write</code>, <code>edit</code>,
-        <code>patch</code>, <code>find</code>, <code>ls</code>,
-        <code>grep</code>, <code>todo</code>, <code>fetch</code>,
-        <code>search</code>, a shell — plus any MCP server's tools.
-        Presence-aware: the model is only offered tools it can actually run.
+        <code>replace</code> (project-wide substitution with a diff and a
+        <code>dry_run</code>),
+        <code>move</code>/<code>copy</code>/<code>delete</code>,
+        <code>find</code>, <code>ls</code>, <code>tree</code>,
+        <code>grep</code>, read-only <code>git</code>, <code>todo</code>,
+        <code>fetch</code>, <code>search</code>, a shell — plus any MCP server's
+        tools. Presence-aware: the model is only offered tools it can actually
+        run, and read tools keep credential files off-limits.
       </p>
     </div>
     <div class="feat">
@@ -374,6 +377,10 @@ command — serializes via serde_json, tests pass.</pre>
     Windows binaries ship with every GitHub Release, alongside
     <code>.deb</code>, <code>.rpm</code>, and Alpine <code>.apk</code>
     packages. Also on crates.io, Homebrew tap, AUR, and Scoop.
+    <strong>hrdr targets UNIX workflows</strong> — the shell tool runs
+    <code>bash</code> (or POSIX <code>sh</code>), so on Windows run it under WSL
+    or install Git Bash. Without one of those there's no shell tool and the
+    agent can't run commands; PowerShell is intentionally not supported.
   </p>
   <div class="cta">
     <a

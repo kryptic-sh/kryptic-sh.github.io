@@ -201,13 +201,12 @@ meta-->
     A vim-style editor in Rust — and the engine that powers it.
   </p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
-    Multi-buffer TUI editor with fuzzy file/buffer/grep pickers,
-    lazygit-adjacent <code>&lt;leader&gt;g</code> git surface (status, log,
-    branches, file history, stash, tags, remotes), tree-sitter highlighting via
-    runtime-loaded grammars (hjkl-bonsai 0.7), the new backend-agnostic
-    <code>hjkl-theme</code> + <code>hjkl-theme-tui</code> stack, marks / macros
-    / dot-repeat / <code>@:</code> last-ex repeat, and focus-regain disk
-    auto-reload. Same vim FSM (<code>hjkl-vim</code>) drives sqeel, buffr, inbx.
+    Multi-buffer TUI editor with window splits and tabs, a full LSP client
+    (diagnostics, goto, hover, completion, code actions, rename, format), fuzzy
+    file/buffer/grep pickers, a lazygit-adjacent
+    <code>&lt;leader&gt;g</code> git surface, tree-sitter highlighting via
+    runtime-loaded grammars, a persistent branching undo tree, and six bundled
+    themes. Same vim FSM (<code>hjkl-vim</code>) drives sqeel, buffr, and inbx.
   </p>
 
   <div class="cta">
@@ -298,7 +297,46 @@ meta-->
       </p>
     </div>
     <div class="feat">
-      <div class="icon">06 — OPEN</div>
+      <div class="icon">06 — LSP</div>
+      <h4>A real LSP client</h4>
+      <p>
+        Per-language server lifecycle, full text-sync, diagnostics, goto, hover,
+        completion, code actions, rename, and format — in
+        <code>hjkl-lsp</code>, usable from any host.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — UNDO</div>
+      <h4>Branching undo, on disk</h4>
+      <p>
+        Undo history is a tree, not a stack: editing after an undo keeps the old
+        branch, <kbd>g-</kbd>/<kbd>g+</kbd> traverse by change number, and
+        <code>:undolist</code> shows the tips. Delta-encoded into an
+        <code>undofile</code>, so undo/redo <em>and</em> your position survive
+        closing the file — a crash <code>:recover</code> restores the tree too.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — MEMORY</div>
+      <h4>It remembers where you were</h4>
+      <p>
+        Reopening a file restores the last cursor position on that buffer (the
+        last-moved window wins across splits), clamped to the file. Config:
+        <code>restore_cursor</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — THEMES</div>
+      <h4>Six bundled, or bring your own</h4>
+      <p>
+        <code>tokyonight</code> (default), <code>catppuccin</code>,
+        <code>gruvbox</code>, <code>nord</code>, <code>dracula</code>,
+        <code>onedark</code> via <code>:colorscheme</code>. Themes drive the
+        terminal background, with a <code>theme.transparent</code> override.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">10 — OPEN</div>
       <h4>MIT, all of it</h4>
       <p>Every crate, every adapter. Fork it, vendor it, ship it. No catch.</p>
     </div>
@@ -307,11 +345,22 @@ meta-->
 
 <section id="crates">
   <h2>crates</h2>
-  <h3>One binary. Twelve ecosystem crates. Each in its own repo.</h3>
+  <h3>One monorepo. Fifty-plus crates, each published on its own.</h3>
+  <p style="color: var(--fg-muted); margin: 0 0 24px">
+    Everything lives in
+    <a href="https://github.com/kryptic-sh/hjkl" target="_blank" rel="noopener"
+      >kryptic-sh/hjkl</a
+    >
+    under <code>crates/&lt;name&gt;</code> and ships independently to crates.io
+    at a shared version. Most subsystems come as a pair: a renderer-agnostic
+    core crate plus a <code>-tui</code> adapter, so a GUI host can take the
+    model and leave the ratatui rendering behind. Add one line and go:
+    <code>hjkl-editor = "0.35"</code>.
+  </p>
   <div class="crates">
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl"
+      href="https://crates.io/crates/hjkl"
       target="_blank"
       rel="noopener"
     >
@@ -319,12 +368,13 @@ meta-->
       <div class="crate-meta">binary · TUI app</div>
       <p class="crate-desc">
         The standalone editor. <code>cargo install hjkl</code> — multi-buffer,
-        pickers, tree-sitter, smart indent, <code>.editorconfig</code>.
+        splits, tabs, pickers, LSP, tree-sitter, smart indent,
+        <code>.editorconfig</code>.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-engine"
+      href="https://docs.rs/hjkl-engine"
       target="_blank"
       rel="noopener"
     >
@@ -332,13 +382,13 @@ meta-->
       <div class="crate-meta">core · controller</div>
       <p class="crate-desc">
         Pure controller: cursor, motions, operators, registers, marks, macros.
-        No I/O deps. The vim FSM was extracted to <code>hjkl-vim</code> in 0.7 —
-        the engine just executes primitives now.
+        No I/O deps. <code>#![deny(missing_docs)]</code> — new public API needs
+        rustdoc.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-vim"
+      href="https://docs.rs/hjkl-vim"
       target="_blank"
       rel="noopener"
     >
@@ -348,145 +398,190 @@ meta-->
         The vim grammar reducer. Pending-state machine for chords
         (<code>m&lt;x&gt;</code>, <code>q&lt;x&gt;</code>,
         <code>@&lt;x&gt;</code>, <code>5dd</code>, <code>"a5dd</code>), count
-        accumulator, dot-repeat, <code>@:</code> last-ex replay.
-        <code>hjkl_vim::handle_key</code> is the canonical FSM entry point.
+        accumulator, dot-repeat, <code>@:</code> last-ex replay. Vocabulary
+        types split out into <code>hjkl-vim-types</code>.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-buffer"
+      href="https://docs.rs/hjkl-buffer"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-buffer</div>
       <div class="crate-meta">data · rope</div>
       <p class="crate-desc">
-        Rope-backed text buffer with cursor, edits, and undo tree. O(log n)
-        inserts and deletes.
+        Rope-backed text buffer with cursor, edits, folds, search, and the
+        persistent branching undo tree. O(log n) inserts and deletes, with
+        criterion budgets CI fails on.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-editor"
+      href="https://docs.rs/hjkl-editor"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-editor</div>
-      <div class="crate-meta">std · glue</div>
+      <div class="crate-meta">std · front door</div>
       <p class="crate-desc">
-        Engine + buffer + registers + ex commands wired together. The
-        "ready-to-host" surface.
+        Facade crate: re-exports engine + buffer + spec types wired together.
+        The "ready-to-host" surface — the one most consumers depend on.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-bonsai"
+      href="https://docs.rs/hjkl-lsp"
+      target="_blank"
+      rel="noopener"
+    >
+      <div class="crate-name">hjkl-lsp</div>
+      <div class="crate-meta">std · language servers</div>
+      <p class="crate-desc">
+        Per-language server lifecycle, full text-sync, diagnostics, goto, hover,
+        completion, code actions, rename, format. Pairs with
+        <code>hjkl-completion</code> and <code>hjkl-hover</code>.
+      </p>
+    </a>
+    <a
+      class="crate"
+      href="https://docs.rs/hjkl-bonsai"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-bonsai</div>
       <div class="crate-meta">std · highlighting</div>
       <p class="crate-desc">
-        Runtime grammar loader. Clones, compiles, and caches
+        Runtime grammar loader — clones, compiles, and caches
         <code>tree-sitter-*</code> grammars on demand. Bare and
-        <code>@</code>-prefixed capture names both resolve;
-        <code>lua-match?</code> / <code>not-lua-match?</code> predicates built
-        in. Comment-marker overlay (TODO/FIXME/NOTE/WARN). Re-exports
-        <code>hjkl_theme::StyleSpec</code> — zero grammars baked in.
+        <code>@</code>-prefixed captures both resolve;
+        <code>lua-match?</code> predicates built in. Zero grammars baked in.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-theme"
+      href="https://docs.rs/hjkl-syntax"
+      target="_blank"
+      rel="noopener"
+    >
+      <div class="crate-name">hjkl-syntax</div>
+      <div class="crate-meta">std · pipeline</div>
+      <p class="crate-desc">
+        <code>SyntaxWorker</code> background thread, render cache, and
+        viewport-scoped highlight passes — so a big file doesn't stall the
+        keystroke loop.
+      </p>
+    </a>
+    <a
+      class="crate"
+      href="https://docs.rs/hjkl-theme"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-theme</div>
       <div class="crate-meta">core · theming</div>
       <p class="crate-desc">
-        Backend-agnostic theme schema. TOML parse, palette interning,
-        tree-sitter capture fallback chain. <code>StyleSpec</code> shared
-        between bonsai, hjkl, and any downstream renderer.
+        Backend-agnostic theme schema: TOML parse, palette interning,
+        tree-sitter capture fallback chain. <code>StyleSpec</code> is shared
+        across bonsai, hjkl, gpur, and any downstream renderer;
+        <code>hjkl-theme-tui</code> converts it to ratatui types.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-theme-tui"
-      target="_blank"
-      rel="noopener"
-    >
-      <div class="crate-name">hjkl-theme-tui</div>
-      <div class="crate-meta">optional · adapter</div>
-      <p class="crate-desc">
-        <code>ToRatatui</code> extension trait — converts
-        <code>hjkl_theme::Color</code> / <code>Modifiers</code> /
-        <code>StyleSpec</code> into ratatui types. Drop into any TUI.
-      </p>
-    </a>
-    <a
-      class="crate"
-      href="https://github.com/kryptic-sh/hjkl-picker"
+      href="https://docs.rs/hjkl-picker"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-picker</div>
       <div class="crate-meta">std · UI</div>
       <p class="crate-desc">
-        Fuzzy picker subsystem. <code>Picker</code>, <code>PickerLogic</code>,
-        <code>FileSource</code>, <code>RgSource</code>, scorer. Reusable across
-        hosts.
+        Fuzzy picker subsystem — file walk, grep, custom sources, and a
+        consumer-agnostic <code>PreviewHighlighter</code> trait. Scoring lives
+        in <code>hjkl-fuzzy</code>.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-form"
+      href="https://docs.rs/hjkl-layout"
+      target="_blank"
+      rel="noopener"
+    >
+      <div class="crate-name">hjkl-layout</div>
+      <div class="crate-meta">core · windows</div>
+      <p class="crate-desc">
+        Renderer-agnostic window/split layout machinery. Tabs live in
+        <code>hjkl-tabs</code>, the statusline model in
+        <code>hjkl-statusline</code>, jump lists in <code>hjkl-quickfix</code>.
+      </p>
+    </a>
+    <a
+      class="crate"
+      href="https://docs.rs/hjkl-form"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-form</div>
       <div class="crate-meta">std · UI</div>
       <p class="crate-desc">
-        Single-line form input built on the engine. Powers <code>:</code> /
-        <code>/</code> prompts and picker query lines.
+        Vim-modal forms with the full vim grammar inside every text field.
+        Powers <code>:</code> / <code>/</code> prompts and picker query lines.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-config"
+      href="https://docs.rs/hjkl-anvil"
       target="_blank"
       rel="noopener"
     >
-      <div class="crate-name">hjkl-config</div>
-      <div class="crate-meta">std · loader</div>
+      <div class="crate-name">hjkl-anvil</div>
+      <div class="crate-meta">std · tooling</div>
       <p class="crate-desc">
-        Shared TOML config loader. XDG path resolution, span-aware parse errors,
-        opt-in <code>Validate</code> hook, layered defaults + user overrides.
+        Mason-style installer for LSP servers and developer tools.
+        <code>hjkl-mangler</code> is the formatter side — rustfmt, prettier,
+        gofmt, ruff, stylua, shfmt, taplo, and more.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-clipboard"
+      href="https://docs.rs/hjkl-clipboard"
       target="_blank"
       rel="noopener"
     >
       <div class="crate-name">hjkl-clipboard</div>
       <div class="crate-meta">std · adapter</div>
       <p class="crate-desc">
-        System clipboard adapter. Bridges <code>"+</code> / <code>"*</code>
-        registers to the OS pasteboard.
+        In-house clipboard for the ecosystem — sync + async, text / HTML / RTF /
+        <code>image/png</code>, with Wayland, X11, macOS, Windows, and OSC 52
+        (SSH) backends. Bridges <code>"+</code> / <code>"*</code> to the OS.
       </p>
     </a>
     <a
       class="crate"
-      href="https://github.com/kryptic-sh/hjkl-ratatui"
+      href="https://docs.rs/hjkl-config"
       target="_blank"
       rel="noopener"
     >
-      <div class="crate-name">hjkl-ratatui</div>
-      <div class="crate-meta">optional · adapter</div>
+      <div class="crate-name">hjkl-config</div>
+      <div class="crate-meta">std · loader</div>
       <p class="crate-desc">
-        Ratatui <code>Style</code> adapters, <code>KeyEvent</code> conversions,
-        and a shared braille spinner. Drop into any TUI.
+        Shared TOML config loader: XDG paths (via <code>hjkl-xdg</code>),
+        span-aware parse errors, opt-in <code>Validate</code> hook, deep-merged
+        defaults + user overrides. Unknown keys are an error.
+      </p>
+    </a>
+    <a
+      class="crate"
+      href="https://github.com/kryptic-sh/hjkl/tree/main/crates/hjkl-compat-oracle"
+      target="_blank"
+      rel="noopener"
+    >
+      <div class="crate-name">hjkl-compat-oracle</div>
+      <div class="crate-meta">dev · conformance</div>
+      <p class="crate-desc">
+        Headless neovim diff harness. Runs a keystroke stream through both real
+        vim and hjkl and fails on divergence — the vim-compatibility regression
+        net.
       </p>
     </a>
   </div>

@@ -436,9 +436,10 @@ meta-->
   <h3>Send, receive, balance — shipped on every chain below.</h3>
   <p style="color: var(--fg-muted); margin: 0 0 24px">
     Each chain ships address derivation, gap-limit scan, fee estimation, sign,
-    and broadcast. EVM and Monero currently expose a single primary address per
-    chain; multi-account / subaddress and ERC-20 reads are tracked in the
-    roadmap.
+    and broadcast. EVM chains scan multiple accounts
+    (<code>m/44'/60'/N'/0/0</code>) and render tagged ERC-20 balances; Monero
+    exposes a single primary address, with subaddresses on the roadmap. Bitcoin
+    testnet is supported alongside mainnet.
   </p>
 
   <div class="chains">

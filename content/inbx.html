@@ -292,7 +292,7 @@ meta-->
   <div class="badges">
     <span class="badge live">● <span data-version="inbx">…</span></span>
     <span class="badge">MIT</span>
-    <span class="badge">Rust TUI + GUI</span>
+    <span class="badge">Rust TUI + CLI</span>
   </div>
   <h1>
     Modal-vim<br />
@@ -422,10 +422,12 @@ meta-->
     </div>
     <div class="feat">
       <div class="icon">04 — STORAGE</div>
-      <h4>Maildir + SQLite + tantivy</h4>
+      <h4>Maildir + SQLite + FTS5</h4>
       <p>
         On-disk Maildir per account. SQLite index in WAL mode (TUI + sync hold
-        the DB concurrently). tantivy full-text index for search. Offline-first.
+        the DB concurrently), with an FTS5 full-text index over subject / from /
+        to / body. JWZ §2 threading, mailing-list bracket tags stripped.
+        Offline-first.
       </p>
     </div>
     <div class="feat">

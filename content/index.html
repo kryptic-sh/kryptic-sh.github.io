@@ -3,7 +3,7 @@
   "slug": "",
   "title": "kryptic.sh — native, vim-shaped, Rust-built tools",
   "description": "Native software tools for people who never left the terminal. Vim-shaped, Rust-built. No Electron. No JVM. No bullshit.",
-  "keywords": "kryptic, vim, rust, terminal, tui, sql client, browser, modal editor, picker, launcher, rofi, sqeel, buffr, hjkl, inbx, hodl, pikr, gpur, hrdr, infr",
+  "keywords": "kryptic, vim, rust, terminal, tui, sql client, browser, modal editor, picker, launcher, rofi, dotfiles manager, sqeel, buffr, hjkl, inbx, hodl, pikr, gpur, hrdr, infr, krypt",
   "accent": "#ff9e64",
   "og_image": "/og-image.png",
   "nav": [
@@ -106,6 +106,9 @@ meta-->
   .proj.infr {
     --c: var(--keyword);
   }
+  .proj.krypt {
+    --c: var(--cyan);
+  }
   .proj-head {
     display: flex;
     align-items: baseline;
@@ -160,7 +163,7 @@ meta-->
 <!--body-->
 <header class="hero">
   <div class="badges">
-    <span class="badge live">● 9 projects</span>
+    <span class="badge live">● 10 projects</span>
     <span class="badge">MIT</span>
     <span class="badge">Rust</span>
   </div>
@@ -194,7 +197,7 @@ meta-->
 <span class="cm"># native tools, one ethos, many surfaces</span>
 
 <span class="dim">drwx</span>  <span class="c-green">sqeel/</span>   <span class="dim">SQL client · MySQL/PG/SQLite/DuckDB</span>  <span class="ok" data-version="sqeel" data-pad="13">…</span>
-<span class="dim">drwx</span>  <span class="c-blue">buffr/</span>   <span class="dim">vim browser · CEF + blink-cdp</span>        <span class="ok" data-version="buffr" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-blue">buffr/</span>   <span class="dim">vim browser · Rust + CEF, Wayland</span>    <span class="ok" data-version="buffr" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-purple">hjkl/</span>    <span class="dim">modal editor + vim engine · Rust</span>     <span class="ok" data-version="hjkl" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-pink">inbx/</span>    <span class="dim">email · IMAP/JMAP/Graph + CalDAV</span>     <span class="ok" data-version="inbx" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-teal">hodl/</span>    <span class="dim">light crypto wallet · TUI + ratatui</span>  <span class="ok" data-version="hodl" data-pad="13">…</span>
@@ -202,6 +205,7 @@ meta-->
 <span class="dim">drwx</span>  <span class="c-orange">gpur/</span>    <span class="dim">btop-style GPU monitor · TUI</span>         <span class="ok" data-version="gpur" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-orange">hrdr/</span>    <span class="dim">agentic coding harness · herder</span>      <span class="ok" data-version="hrdr" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-purple">infr/</span>    <span class="dim">LLM inference engine · Vulkan</span>        <span class="ok" data-version="infr" data-pad="13">wip</span>
+<span class="dim">drwx</span>  <span class="c-cyan">krypt/</span>   <span class="dim">dotfiles manager · config-driven</span>     <span class="ok" data-version="krypt" data-pad="13">…</span>
 
 <span class="ok">$</span> cat principles.txt
 <span class="cm"># native rust · modal editing · mouse + keyboard · zero telemetry</span></pre>
@@ -220,9 +224,10 @@ meta-->
       <p class="proj-tag">Vim-native SQL client.</p>
       <p class="proj-desc">
         MySQL · Postgres · SQLite · DuckDB (CSV / Parquet queries out of the
-        box). Terminal (ratatui) and native GUI (iced) from one core. Per-file
-        TOML connections, OS-keyring credentials, sqls LSP, tree-sitter
-        highlighting, query-history fuzzy picker.
+        box). ratatui TUI with per-tab connections and warm pool swapping,
+        OS-keyring credentials, sqls LSP (hover + goto-def), tree-sitter
+        highlighting, destructive-statement guard, and a headless
+        <code>-e</code> mode for scripts and CI.
       </p>
       <div class="proj-links">
         <a href="/sqeel/">site →</a>
@@ -243,11 +248,11 @@ meta-->
       </div>
       <p class="proj-tag">Vim-inspired browser.</p>
       <p class="proj-desc">
-        Native, GPU-accelerated. Two backends behind one
-        <code>BrowserEngine</code> trait — CEF for legacy parity, blink-cdp
-        (headless Chromium over CDP) for sandboxed isolation; per-domain rules
-        pick the engine per tab. Modal browsing, hint-mode, ex-style command
-        palette, find-in-page, IME, PiP.
+        Native, GPU-accelerated, Wayland-only. Chromium via CEF is the shipping
+        backend, behind a <code>BrowserEngine</code> trait with per-domain
+        engine rules — a WPE WebKit backend lives in-tree behind the same seam.
+        Modal browsing, hint-mode, ex-style command palette, find-in-page, IME,
+        PiP, SQLite-backed history / bookmarks / downloads / permissions.
       </p>
       <div class="proj-links">
         <a href="/buffr/">site →</a>
@@ -268,11 +273,11 @@ meta-->
       </div>
       <p class="proj-tag">Modal editor + vim engine.</p>
       <p class="proj-desc">
-        Vim-modal terminal editor — multi-buffer, fuzzy file/buffer/grep
-        pickers, lazygit-adjacent <code>&lt;leader&gt;g</code> git surface,
-        runtime tree-sitter grammar loading via hjkl-bonsai, backend-agnostic
-        <code>hjkl-theme</code> stack, marks / macros / dot-repeat /
-        <code>@:</code> last-ex repeat. Same vim FSM (<code>hjkl-vim</code>)
+        Vim-modal terminal editor — multi-buffer, splits and tabs, a full LSP
+        client, fuzzy file/buffer/grep pickers, lazygit-adjacent
+        <code>&lt;leader&gt;g</code> git surface, runtime tree-sitter grammar
+        loading, a persistent branching undo tree, and six bundled themes.
+        Fifty-plus crates on crates.io; the same vim FSM (<code>hjkl-vim</code>)
         drives sqeel, buffr, and inbx.
       </p>
       <div class="proj-links">
@@ -295,9 +300,10 @@ meta-->
       <p class="proj-tag">Modal-vim email client.</p>
       <p class="proj-desc">
         IMAP/SMTP, Gmail XOAUTH2, Microsoft Graph, JMAP — one client, every
-        inbox. Maildir + SQLite (WAL) + tantivy. Multi-folder sync with optional
-        <code>inbx-sync</code> IPC daemon. CalDAV + CardDAV + ManageSieve. PGP
-        via gpg or local keys. Composer powered by hjkl.
+        inbox. Maildir + SQLite (WAL) + FTS5 search and JWZ threading.
+        Multi-folder sync with optional <code>inbx-sync</code> IPC daemon.
+        CalDAV + CardDAV + ManageSieve. PGP via gpg or local keys. Composer
+        powered by hjkl.
       </p>
       <div class="proj-links">
         <a href="/inbx/">site →</a>
@@ -342,11 +348,10 @@ meta-->
       </div>
       <p class="proj-tag">Vim-modal picker / launcher.</p>
       <p class="proj-desc">
-        Rofi replacement with hjkl keys. dmenu over stdin, XDG
-        <code>.desktop</code> drun, <code>$PATH</code> run. Floem-rendered with
-        Wayland layer-shell incoming via a winit fork. Normal/insert modal
-        split, vim motions, fuzzy match via nucleo. Single binary, no daemon, no
-        telemetry.
+        Rofi replacement with hjkl keys. Seven modes — dmenu, drun, run, ssh,
+        emoji, clipboard, calc — on a floem-rendered Wayland layer-shell overlay
+        with exclusive keyboard grab. Normal/insert modal split, vim motions,
+        fuzzy match via nucleo. Single binary, no daemon, no telemetry.
       </p>
       <div class="proj-links">
         <a href="/pikr/">site →</a>
@@ -392,9 +397,10 @@ meta-->
       <p class="proj-tag">Agentic coding harness.</p>
       <p class="proj-desc">
         "Herder" — a fast agentic coding harness for OpenAI-compatible and
-        Anthropic models. TUI and native GUI from one agent core. Adaptive tool
-        set + MCP, sub-agents, persistent memory, prompt caching, guardrails
-        that hard-block foot-guns. The vim layer is hjkl, of course.
+        Anthropic models. A ratatui TUI over a UI-agnostic agent core, or
+        headless NDJSON for CI. Adaptive tool set + MCP, sub-agents, persistent
+        memory, prompt caching, guardrails that hard-block foot-guns. The vim
+        layer is hjkl, of course.
       </p>
       <div class="proj-links">
         <a href="/hrdr/">site →</a>
@@ -425,6 +431,32 @@ meta-->
         <a
           class="muted"
           href="https://github.com/kryptic-sh/infr"
+          target="_blank"
+          rel="noopener"
+          >github ↗</a
+        >
+      </div>
+    </article>
+
+    <article class="proj krypt">
+      <div class="proj-head">
+        <span class="proj-name">krypt</span>
+        <span class="proj-status" data-version="krypt">…</span>
+      </div>
+      <p class="proj-tag">Cross-platform dotfiles manager.</p>
+      <p class="proj-desc">
+        A vault for your dotfiles on Linux, macOS, and Windows. Copy-based
+        deploy with manifest-tracked drift detection replaces
+        <code>stow</code>; a declarative <code>.krypt.toml</code> with a
+        predicate-gated step runner replaces the <code>.setup</code> /
+        <code>.update</code> bash pile. Package-manager abstraction, first-run
+        wizard, generic subcommand dispatcher.
+      </p>
+      <div class="proj-links">
+        <a href="/krypt/">site →</a>
+        <a
+          class="muted"
+          href="https://github.com/kryptic-sh/krypt"
           target="_blank"
           rel="noopener"
           >github ↗</a

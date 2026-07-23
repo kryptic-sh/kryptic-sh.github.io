@@ -204,9 +204,10 @@ meta-->
       <div class="icon">04 — MODELS</div>
       <h4>Dense, MoE, hybrid, diffusion</h4>
       <p>
-        Llama, Qwen2/2.5, Qwen3 (dense + MoE), Gemma 3, Gemma 4 (dense + E2B),
-        Qwen3.5/3.6 hybrid gated-DeltaNet, and DiffusionGemma block
-        text-diffusion — all on one unified runner.
+        Llama, Llama 4 Scout, Qwen2/2.5, Qwen3 (dense + MoE), Gemma 3, Gemma 4
+        (dense + E2B + 26B-A4B MoE), Qwen3.5/3.6 hybrid gated-DeltaNet (dense +
+        MoE), and DiffusionGemma block text-diffusion — all on one unified
+        runner.
       </p>
     </div>
     <div class="feat">
@@ -264,17 +265,29 @@ meta-->
 
 <section id="models">
   <h2>models</h2>
-  <h3>Nine architectures. GGUF in, tokens out.</h3>
+  <h3>Twelve architectures. GGUF in, tokens out.</h3>
   <p style="color: var(--fg-muted); margin: 0 0 24px">
     All run on the Vulkan GPU backend unless noted. The chat template — turn
     markers, system prompt — is read from the GGUF's own
-    <code>tokenizer.chat_template</code>.
+    <code>tokenizer.chat_template</code>. Fine-tunes on any of these backbones
+    run unchanged — Ornith-1.0 and Ternary-Bonsai both ride existing skeletons
+    with zero code changes. infr is also the only engine that runs llama.cpp's
+    new <strong>Q2_0</strong> ternary weight dtype (2.25 bpw) on a GPU, with
+    in-shader dequant and dp4a mmq — upstream merged it CPU-only.
   </p>
   <div class="models">
     <div class="model">
       <div class="arch">gguf · llama</div>
       <div class="name">Llama</div>
       <div class="meta">dense transformer</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · llama4</div>
+      <div class="name">Llama 4 (Scout)</div>
+      <div class="meta">
+        sigmoid top-1 MoE + shared expert · iRoPE · paged experts (37 GB Q2_K on
+        a 24 GB card)
+      </div>
     </div>
     <div class="model">
       <div class="arch">gguf · qwen2</div>
@@ -311,9 +324,19 @@ meta-->
       </div>
     </div>
     <div class="model">
+      <div class="arch">gguf · gemma4</div>
+      <div class="name">Gemma 4 MoE</div>
+      <div class="meta">26B-A4B · dual FFN — dense GeGLU ∥ 8-of-128 routed</div>
+    </div>
+    <div class="model">
       <div class="arch">gguf · qwen35</div>
       <div class="name">Qwen3.5 / Qwen3.6</div>
       <div class="meta">hybrid gated-DeltaNet + attention · CPU + Vulkan</div>
+    </div>
+    <div class="model">
+      <div class="arch">gguf · qwen35moe</div>
+      <div class="name">Qwen3.6 MoE</div>
+      <div class="meta">qwen35 skeleton + routed experts + shared expert</div>
     </div>
     <div class="model">
       <div class="arch">gguf · diffusion-gemma</div>
