@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#89ddff"/>
+      <stop offset="0.55" stop-color="#73daca"/>
+      <stop offset="1" stop-color="#7ee787"/>
+    </linearGradient>
+    <radialGradient id="bg1" cx="18%" cy="0%" r="50%">
+      <stop offset="0" stop-color="#89ddff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#89ddff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bg2" cx="82%" cy="100%" r="60%">
+      <stop offset="0" stop-color="#7ee787" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#7ee787" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0b0d10"/>
+  <rect width="1200" height="630" fill="url(#bg1)"/>
+  <rect width="1200" height="630" fill="url(#bg2)"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700">
+    <text x="80" y="150" font-size="42" fill="#89ddff">$ krypt update<tspan fill="#89ddff">_</tspan></text>
+  </g>
+  <g font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="700">
+    <text x="80" y="290" font-size="88" fill="#e5e9f0">A vault for</text>
+    <text x="80" y="395" font-size="88" fill="url(#g)">your dotfiles.</text>
+  </g>
+  <g font-family="Inter, system-ui, -apple-system, sans-serif">
+    <text x="80" y="470" font-size="32" fill="#8b95a7" font-weight="500">Clone, deploy, and keep in sync across</text>
+    <text x="80" y="515" font-size="32" fill="#8b95a7" font-weight="500">Linux · macOS · Windows. One Rust binary.</text>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="500">
+    <rect x="80" y="560" width="70" height="36" rx="4" fill="#11141a" stroke="#2a3240"/>
+    <text x="115" y="585" fill="#8b95a7" text-anchor="middle">MIT</text>
+    <rect x="160" y="560" width="80" height="36" rx="4" fill="#11141a" stroke="#2a3240"/>
+    <text x="200" y="585" fill="#8b95a7" text-anchor="middle">Rust</text>
+    <rect x="250" y="560" width="215" height="36" rx="4" fill="#11141a" stroke="#3f6e85"/>
+    <text x="357" y="585" fill="#89ddff" text-anchor="middle">config-driven</text>
+  </g>
+  <g transform="translate(880, 150)">
+    <rect width="240" height="240" rx="38" fill="#11141a" stroke="#2a3240" stroke-width="4"/>
+    <g transform="translate(28, 28) scale(3.05)">
+      <path d="M14 20 L24 32 L14 44" fill="none" stroke="#89ddff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M36 31 V26 a5 5 0 0 1 10 0 V31" fill="none" stroke="#89ddff" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="30" y="31" width="22" height="16" rx="2.5" fill="#89ddff" fill-opacity="0.18" stroke="#89ddff" stroke-width="2"/>
+      <circle cx="41" cy="37.5" r="2.2" fill="#89ddff"/>
+      <path d="M41 39.5 V42.5" stroke="#89ddff" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700">
+    <rect x="770" y="550" width="360" height="56" rx="8" fill="#89ddff"/>
+    <text x="950" y="587" font-size="26" fill="#04141d" text-anchor="middle">$ paru -S krypt-bin →</text>
+  </g>
+</svg>

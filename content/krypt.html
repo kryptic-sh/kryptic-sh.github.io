@@ -1,0 +1,415 @@
+<!--meta
+{
+  "slug": "krypt",
+  "repo": "krypt",
+  "title": "krypt — cross-platform dotfiles manager. Rust binary, config-driven.",
+  "description": "A vault for your dotfiles — clone, deploy, and keep in sync across Linux, macOS, and Windows. One Rust binary replaces stow plus your pile of bash orchestrators, driven by a declarative .krypt.toml.",
+  "keywords": "dotfiles manager, krypt, stow replacement, rust dotfiles, chezmoi alternative, yadm alternative, cross-platform dotfiles, .krypt.toml, symlink manager, dotfiles sync, kryptic",
+  "accent": "#89ddff",
+  "og_image": "/krypt/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#config", "label": "config" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/krypt/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/krypt", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "krypt",
+    "description": "Cross-platform dotfiles manager. A single Rust binary that clones, deploys, and syncs dotfiles on Linux, macOS, and Windows from a declarative .krypt.toml.",
+    "url": "https://www.kryptic.sh/krypt/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/krypt",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #89ddff;
+    --accent-dim: #3f6e85;
+    --accent-ink: #04141d;
+    --accent-hover: #b0e9ff;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 18% 0%,
+        rgba(137, 221, 255, 0.07),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 82% 18%,
+        rgba(126, 231, 135, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--teal) 50%,
+      var(--green) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* command table */
+  .cmds {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .cmds td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmds tr:last-child td {
+    border-bottom: 0;
+  }
+  .cmds td:first-child {
+    color: var(--accent);
+    white-space: nowrap;
+    width: 1%;
+  }
+  .cmds td:last-child {
+    color: var(--fg-dim);
+    font-family: var(--sans);
+  }
+  .table-wrap {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="krypt">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+    <span class="badge">Linux · macOS · Windows</span>
+  </div>
+  <h1>
+    A vault for<br />
+    <span class="grad">your dotfiles.</span>
+  </h1>
+  <p class="tagline">
+    Clone, deploy, and keep in sync across Linux, macOS, and Windows.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    One Rust binary replaces <code>stow</code> and the pile of
+    <code>.setup</code> / <code>.update</code> bash scripts around it.
+    Copy-based deploy with manifest-tracked drift detection, driven by a
+    declarative <code>.krypt.toml</code>.
+  </p>
+
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/krypt"
+      target="_blank"
+      rel="noopener"
+      >view on github →</a
+    >
+    <a class="btn" href="#why">why krypt ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">krypt — daily update</span>
+    </div>
+    <pre><span class="ok">$</span> krypt update
+<span class="dim">→</span> pull      <span class="ok">✓</span> dotfiles up to date <span class="dim">(3 commits, auto-stashed 1 file)</span>
+<span class="dim">→</span> deploy    <span class="ok">✓</span> 71 files <span class="dim">·</span> <span class="num">2</span> updated <span class="dim">·</span> <span class="num">0</span> drifted
+<span class="dim">→</span> hooks
+   <span class="kw">[hook]</span> reload-hypr    <span class="dim">platform:linux</span>        <span class="ok">✓</span>
+   <span class="kw">[hook]</span> rebuild-bat    <span class="dim">command_exists:bat</span>    <span class="ok">✓</span>
+   <span class="kw">[hook]</span> brew-bundle    <span class="dim">platform:macos</span>        <span class="dim">skipped</span>
+<span class="ok">✓</span> up to date in <span class="num">1.2s</span>
+
+<span class="ok">$</span> krypt diff
+<span class="dim">M</span> ~/.config/nvim/init.lua   <span class="dim">deployed ≠ staged</span>
+<span class="ok">$</span> krypt adopt ~/.config/nvim/init.lua
+<span class="ok">✓</span> pulled hand-edit back into the repo</pre>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>stow can't run your setup. bash can't track your drift.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — BINARY</div>
+      <h4>One binary, three OSes</h4>
+      <p>
+        Linux, macOS, Windows from the same <code>.krypt.toml</code>. No Perl,
+        no Python, no shell dialect roulette.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — DEPLOY</div>
+      <h4>Copy-based deploy + drift</h4>
+      <p>
+        Replaces <code>stow</code>. Every deployed file is recorded in a
+        manifest, so <code>krypt diff</code> tells you exactly what drifted and
+        <code>krypt adopt</code> pulls a hand-edit back into the repo.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — DECLARE</div>
+      <h4>Declarative <code>.krypt.toml</code></h4>
+      <p>
+        Links, packages, prompts, commands, and hooks in one schema.
+        <code>krypt validate</code> parses it and reports schema errors before
+        anything touches your home directory.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — RUNNER</div>
+      <h4>Step runner with predicates</h4>
+      <p>
+        Steps gate on <code>command_exists:</code> / <code>platform:</code> /
+        <code>env:</code> / <code>file_exists:</code>. The machine that doesn't
+        have <code>bat</code> just skips the <code>bat</code> hook — no
+        <code>if command -v</code> soup.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — PKG</div>
+      <h4>Package managers, abstracted</h4>
+      <p>
+        pacman · paru · apt · dnf · brew · scoop · winget behind one dependency
+        list. Declare the package once, install it on whatever distro you woke
+        up on.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — WIZARD</div>
+      <h4>First-run <code>[prompts.*]</code></h4>
+      <p>
+        <code>krypt setup</code> walks an interactive wizard — git identity,
+        machine profile, whatever you declare — then installs deps and deploys.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — DISPATCH</div>
+      <h4>Generic subcommand dispatcher</h4>
+      <p>
+        Any <code>[[command]]</code> entry is reachable as
+        <code>krypt &lt;group&gt; &lt;name&gt;</code> with no binary changes.
+        Your rofi launchers become first-class subcommands.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — VARS</div>
+      <h4><code>${VAR}</code> interpolation</h4>
+      <p>
+        Built-ins (<code>${HOME}</code>, <code>${XDG_CONFIG}</code>,
+        <code>${LOCAL_BIN}</code>) then process env, resolved eagerly at config
+        load. Unknown var = hard error citing file, location, and name.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — GIT</div>
+      <h4>Auto-stash on update</h4>
+      <p>
+        Uncommitted work at pull time gets stashed via <code>gix-stash</code>,
+        pulled over, and popped back. Conflicts surface with the stash OID so
+        you can apply by hand. Opt out with <code>--no-stash</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">10 — NOTIFY</div>
+      <h4>Platform-correct notifications</h4>
+      <p>
+        <code>krypt notify &lt;title&gt; &lt;body&gt;</code> speaks libnotify /
+        NSUserNotification / Windows toast so your scripts don't have to.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — CRATES</div>
+      <h4>Four-crate workspace</h4>
+      <p>
+        <code>krypt-cli</code> (thin clap dispatch) ·
+        <code>krypt-core</code> (schema, resolver, copy engine, manifest,
+        runner, predicates, hooks) · <code>krypt-pkg</code> ·
+        <code>krypt-platform</code>.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">12 — MIGRATE</div>
+      <h4>Coming from stow + bash</h4>
+      <p>
+        <a
+          href="https://github.com/kryptic-sh/krypt/blob/main/docs/migrating-from-bash.md"
+          target="_blank"
+          rel="noopener"
+          >docs/migrating-from-bash.md ↗</a
+        >
+        maps stow → <code>[[link]]</code>, <code>.update</code> →
+        <code>krypt update</code>, launcher scripts → <code>[[command]]</code>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="config">
+  <h2>commands</h2>
+  <h3>Five verbs cover the daily loop.</h3>
+  <div class="table-wrap">
+    <table class="cmds">
+      <tr>
+        <td>krypt init &lt;url&gt;</td>
+        <td>clone your dotfiles repo to the XDG path</td>
+      </tr>
+      <tr>
+        <td>krypt setup</td>
+        <td>interactive wizard — prompts, then dependencies</td>
+      </tr>
+      <tr>
+        <td>krypt link</td>
+        <td>deploy files to their declared destinations</td>
+      </tr>
+      <tr>
+        <td>krypt update</td>
+        <td>the daily one: pull, redeploy, run post-update hooks</td>
+      </tr>
+      <tr>
+        <td>krypt doctor</td>
+        <td>diagnose config, paths, and missing dependencies</td>
+      </tr>
+      <tr>
+        <td>krypt validate</td>
+        <td>parse <code>.krypt.toml</code>, report schema errors</td>
+      </tr>
+      <tr>
+        <td>krypt diff</td>
+        <td>show staged vs deployed differences</td>
+      </tr>
+      <tr>
+        <td>krypt adopt &lt;path&gt;</td>
+        <td>pull a hand-edited file back into the repo</td>
+      </tr>
+      <tr>
+        <td>krypt unlink / relink</td>
+        <td>reverse or refresh a deploy</td>
+      </tr>
+      <tr>
+        <td>krypt menu [name]</td>
+        <td>list or run <code>group = "menu"</code> commands</td>
+      </tr>
+      <tr>
+        <td>krypt &lt;group&gt; &lt;name&gt;</td>
+        <td>generic dispatcher for any declared command group</td>
+      </tr>
+      <tr>
+        <td>krypt battery</td>
+        <td>
+          built-in battery <code>report</code> / <code>log</code> /
+          <code>clear</code>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <p class="install-note" style="margin-top: 24px">
+    Worked example:
+    <a
+      href="https://github.com/mxaddict/dotfiles"
+      target="_blank"
+      rel="noopener"
+      >mxaddict/dotfiles ↗</a
+    >
+    — Arch + Hyprland, ~70 links, ~30 commands, ~10 post-update hooks.
+  </p>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Every channel drops a <code>krypt</code> on your <code>$PATH</code>.</h3>
+  <p class="install-note">
+    Arch via AUR, macOS via the Homebrew tap, Windows via Scoop, or
+    <code>cargo install</code> anywhere. The <code>krypt</code> name on
+    crates.io is held by an unrelated stale project, so the binary crate is
+    published as <code>krypt-cli</code> for now.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/krypt/releases/latest"
+      target="_blank"
+      rel="noopener"
+      >latest release →</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/homebrew-tap"
+      target="_blank"
+      rel="noopener"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/scoop-bucket"
+      target="_blank"
+      rel="noopener"
+      >Scoop bucket ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">krypt — package managers</span>
+    </div>
+    <pre class="install-code"><span class="cm"># Arch (AUR)</span>
+<span class="ok">$</span> paru -S krypt-bin
+
+<span class="cm"># macOS (Homebrew tap)</span>
+<span class="ok">$</span> brew install kryptic-sh/tap/krypt
+
+<span class="cm"># Windows (Scoop)</span>
+<span class="ok">$</span> scoop bucket add kryptic https://github.com/kryptic-sh/scoop-bucket
+<span class="ok">$</span> scoop install krypt
+
+<span class="cm"># any platform (crates.io)</span>
+<span class="ok">$</span> cargo install krypt-cli</pre>
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">krypt — first run</span>
+    </div>
+    <pre
+      class="install-code"
+    ><span class="ok">$</span> krypt init https://github.com/you/dotfiles
+<span class="ok">$</span> krypt setup
+<span class="ok">$</span> krypt link
+<span class="cm"># then, forever after:</span>
+<span class="ok">$</span> krypt update</pre>
+  </div>
+</section>
+<!--/body-->

@@ -52,6 +52,7 @@ SIBLINGS = [
     ("gpur", "gpur"),
     ("hrdr", "hrdr"),
     ("infr", "infr"),
+    ("krypt", "krypt"),
 ]
 
 META_RE = re.compile(r"<!--meta\s*(.*?)\s*meta-->", re.S)
