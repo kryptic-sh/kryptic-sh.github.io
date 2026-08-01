@@ -50,6 +50,7 @@ SIBLINGS = [
     ("hodl", "hodl"),
     ("pikr", "pikr"),
     ("gpur", "gpur"),
+    ("crcbl", "crcbl"),
     ("hrdr", "hrdr"),
     ("infr", "infr"),
     ("krypt", "krypt"),

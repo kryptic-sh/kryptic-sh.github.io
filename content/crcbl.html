@@ -1,0 +1,182 @@
+<!--meta
+{
+  "slug": "crcbl",
+  "repo": "crcbl",
+  "title": "crcbl — a game engine written from scratch. Rust, Vulkan, WebGPU.",
+  "description": "crcbl (Crucible) — a game engine built from the ground up in Rust. Own Wayland and X11 backends over hand-written FFI, a Vulkan renderer, a WebGPU backend, deterministic simulation, and browser demos that run the same engine as the native build.",
+  "keywords": "crcbl, crucible, game engine, rust, vulkan, webgpu, wasm, wayland, x11, render graph, ecs, deterministic simulation, netcode, spatial audio, kryptic",
+  "accent": "#bb9af7",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#built", "label": "what exists" },
+    { "href": "https://crcbl.kryptic.sh/", "label": "demos" },
+    { "href": "https://github.com/kryptic-sh/crcbl", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "crcbl",
+    "description": "A game engine written from scratch in Rust. Vulkan and WebGPU backends, own windowing over hand-written FFI, deterministic simulation, and browser demos.",
+    "url": "https://www.kryptic.sh/crcbl/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, Web",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/crcbl",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #bb9af7;
+    --accent-dim: #5a4b7a;
+    --accent-ink: #1a1226;
+    --accent-hover: #cdb6fa;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(187, 154, 247, 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(122, 162, 247, 0.05),
+        transparent 45%
+      );
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+    <span class="badge">Vulkan · WebGPU</span>
+    <span class="badge">Linux · Web</span>
+    <span class="badge warn">in development</span>
+  </div>
+  <h1>
+    From scratch.<br />
+    <span class="grad">All the way down.</span>
+  </h1>
+  <p class="tagline">
+    A game engine with no engine underneath it.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    Its own Wayland and X11 backends over hand-written FFI — no winit, no SDL.
+    Its own Wayland protocol code generator. A render graph that is the only
+    thing in a frame allowed to emit a barrier. A Vulkan backend and a WebGPU
+    backend implementing one seam, checked against each other pixel by pixel.
+    The browser demos run the same engine as the native build, compiled to
+    wasm32.
+  </p>
+
+  <div class="cta">
+    <a class="btn primary" href="https://crcbl.kryptic.sh/">play the demos →</a>
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/crcbl"
+      target="_blank"
+      rel="noopener"
+      >source</a
+    >
+    <a class="btn" href="#why">why ↓</a>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <p>
+    Because &ldquo;from scratch&rdquo; is where the learning is. Every layer a
+    normal engine hands you — the window, the swapchain, the input stack, the
+    replication protocol, the mixer — is a layer whose failure modes you never
+    see. Writing them means meeting those failure modes personally.
+  </p>
+  <p>
+    That principle has a cost and the repo pays it in public. The windowing
+    crate talks to <code>libwayland-client</code> and <code>libxcb</code>
+    through FFI written by hand and bound at runtime with
+    <code>dlopen</code>, driven by a Wayland protocol scanner also written for
+    this project. Nothing above the hardware abstraction layer is allowed to
+    name a Vulkan type. Every <code>unsafe</code> block carries a comment naming
+    the invariant it depends on.
+  </p>
+  <p>
+    The other half of the principle is that a check which cannot fail is not a
+    check. Tests here are broken on purpose to confirm they go red before they
+    are trusted — the browser gate, the cross-backend image comparison and the
+    shader manifest were each built that way, and each caught something real
+    the first time it ran.
+  </p>
+</section>
+
+<section id="built">
+  <h2>what exists</h2>
+  <p>
+    The engine is built in phases, each ending in a sample that proves the
+    phase. Breakout is the first one, and it runs natively and in a browser
+    from the same source.
+  </p>
+  <ul>
+    <li>
+      <strong>Windowing</strong> — Wayland and X11 backends over hand-written
+      <code>dlopen</code>'d FFI. Monitors, XKB keymaps, pointer lock and raw
+      motion, fractional scale, clipboard, drag and drop.
+    </li>
+    <li>
+      <strong>Rendering</strong> — a Vulkan backend and a WebGPU backend behind
+      one seam, plus a render graph whose compile step is pure and testable
+      with no GPU at all.
+    </li>
+    <li>
+      <strong>Simulation</strong> — an ECS with system-owned arrays, an
+      authoritative fixed-tick server, client interpolation, and a physics
+      pillar with swept-sphere collision. Same input, same hash, every run.
+    </li>
+    <li>
+      <strong>Netcode</strong> — delta compression against acknowledged
+      baselines, session resume, and an authenticated wire protocol. Hostile
+      input is assumed, and the decoders are fuzzed in CI.
+    </li>
+    <li>
+      <strong>Audio</strong> — a mixer with a spatial cue grammar, WAV and QOA
+      decoding, and an AudioWorklet output for the browser.
+    </li>
+    <li>
+      <strong>The browser</strong> — every sample ships as a demo. A headless
+      Chromium gate loads the built page, opens a WebGPU device, drives a real
+      keypress and reads the canvas back, so the web target cannot rot
+      unnoticed.
+    </li>
+  </ul>
+  <p>
+    Still to come: GPU-driven rendering, an editor, assets and scenes, and the
+    samples that force each of them.
+    <a href="https://github.com/kryptic-sh/crcbl/blob/main/docs/plan/ROADMAP.md"
+      >The roadmap</a
+    >
+    is the honest version — it records what is missing and what is broken
+    alongside what works.
+  </p>
+
+  <div class="cta">
+    <a class="btn primary" href="https://crcbl.kryptic.sh/">play the demos →</a>
+    <a
+      class="btn"
+      href="https://github.com/kryptic-sh/crcbl"
+      target="_blank"
+      rel="noopener"
+      >read the source</a
+    >
+  </div>
+</section>
+<!--/body-->

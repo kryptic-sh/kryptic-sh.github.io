@@ -91,7 +91,7 @@ jobs:
           test -f dist/.nojekyll
           test -f dist/assets/css/base.css
           test -f dist/assets/js/site.js
-          for app in sqeel buffr hjkl inbx hodl pikr gpur hrdr infr; do
+          for app in sqeel buffr hjkl inbx hodl pikr gpur crcbl hrdr infr; do
             test -f "dist/$app/index.html" || { echo "::error::missing dist/$app/index.html"; exit 1; }
           done
           test -f dist/buffr/docs/index.html
