@@ -40,6 +40,22 @@ from typing import NoReturn
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT / "dist"
 
+# Project pages live under /projects/<slug>/, not /<slug>/.
+#
+# This repo is the org's GitHub Pages site (`kryptic-sh.github.io`) and carries
+# the custom domain, so *every* project site in the org is served under that
+# domain at /<repo>/ — and when the project has its own custom domain, GitHub
+# 301s the whole path to it. buffr and crcbl publish their own sites, so
+# /buffr/ and /crcbl/ no longer belong to this repo at all: they redirect to
+# buffr.kryptic.sh and crcbl.kryptic.sh. A prefix the org has no repo named
+# keeps the landing pages reachable and cannot collide with a future one.
+PROJECTS = "projects"
+
+
+def page_href(slug: str) -> str:
+    """The site-absolute URL of a page, given its slug ("" is the homepage)."""
+    return "/" if not slug else f"/{PROJECTS}/{slug}/"
+
 # siblings-bar order; "" = homepage
 SIBLINGS = [
     ("", "kryptic"),
@@ -90,7 +106,7 @@ def siblings_html(current_slug: str) -> str:
         if slug == current_slug:
             parts.append(f'<span class="current">{label}</span>')
         else:
-            href = "/" if slug == "" else f"/{slug}/"
+            href = page_href(slug)
             parts.append(f'<a href="{href}">{label}</a>')
     return "\n        ".join(parts)
 
@@ -119,10 +135,11 @@ def brand_html(slug: str) -> str:
 
 def render(layout: str, meta: dict, head_extra: str, content: str) -> str:
     slug = meta.get("slug", "")
-    canonical = "https://www.kryptic.sh/" + (f"{slug}/" if slug else "")
+    canonical = "https://www.kryptic.sh" + page_href(slug)
     assets = meta.get("assets")
     if assets is None:
-        assets = f"/{slug}/" if slug and (ROOT / "public" / slug / "favicon.svg").exists() else "/"
+        has_own = slug and (ROOT / "public" / PROJECTS / slug / "favicon.svg").exists()
+        assets = page_href(slug) if has_own else "/"
     repo = meta.get("repo")
     footer = (
         f'<a href="https://github.com/kryptic-sh/{repo}">github</a>'
@@ -178,10 +195,36 @@ def main() -> None:
         meta, head_extra, body = parse_content(page)
         html = render(layout, meta, head_extra, body)
         slug = meta.get("slug", "")
-        out = DIST / slug / "index.html" if slug else DIST / "index.html"
+        out = DIST / PROJECTS / slug / "index.html" if slug else DIST / "index.html"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(html)
         print(f"built {out.relative_to(ROOT)}")
+
+    # 4. redirects from the pre-/projects/ URLs. Those links are out in the
+    #    world; a move is not a reason to break them. The two whose repos have
+    #    their own Pages (buffr, crcbl) never serve these — GitHub routes
+    #    /<repo>/ to the project site before this repo is consulted — but
+    #    emitting them uniformly means the stub is already there if a project
+    #    ever stops publishing its own site.
+    for slug, _label in SIBLINGS:
+        if not slug:
+            continue
+        target = page_href(slug)
+        stub = DIST / slug / "index.html"
+        stub.parent.mkdir(parents=True, exist_ok=True)
+        stub.write_text(
+            "<!doctype html>\n"
+            '<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n'
+            f"    <title>moved to {target}</title>\n"
+            f'    <link rel="canonical" href="https://www.kryptic.sh{target}" />\n'
+            f'    <meta http-equiv="refresh" content="0; url={target}" />\n'
+            '    <meta name="robots" content="noindex, follow" />\n'
+            f"    <script>location.replace('{target}' + location.hash);</script>\n"
+            "  </head>\n  <body>\n"
+            f'    <p>This page moved to <a href="{target}">{target}</a>.</p>\n'
+            "  </body>\n</html>\n"
+        )
+    print(f"built {len(SIBLINGS) - 1} redirect(s) from the old /<slug>/ paths")
 
     if not (DIST / "CNAME").exists():
         die("missing public/CNAME")

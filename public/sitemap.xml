@@ -7,61 +7,65 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/sqeel/</loc>
+    <loc>https://www.kryptic.sh/projects/sqeel/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/buffr/</loc>
+    <loc>https://www.kryptic.sh/projects/buffr/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/hjkl/</loc>
+    <loc>https://www.kryptic.sh/projects/hjkl/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/inbx/</loc>
+    <loc>https://www.kryptic.sh/projects/inbx/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/hodl/</loc>
+    <loc>https://www.kryptic.sh/projects/hodl/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/pikr/</loc>
+    <loc>https://www.kryptic.sh/projects/pikr/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/gpur/</loc>
+    <loc>https://www.kryptic.sh/projects/gpur/</loc>
+    <lastmod>2026-08-02</lastmod>
+  </url>
+  <url>
+    <loc>https://www.kryptic.sh/projects/crcbl/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/hrdr/</loc>
+    <loc>https://www.kryptic.sh/projects/hrdr/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/infr/</loc>
+    <loc>https://www.kryptic.sh/projects/infr/</loc>
     <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.kryptic.sh/krypt/</loc>
+    <loc>https://www.kryptic.sh/projects/krypt/</loc>
     <lastmod>2026-07-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

@@ -1,20 +1,23 @@
 name: Pages
 
-# GitHub Pages deploy for the unified kryptic.sh site. Every project page
-# lives under /<app>/ on this domain (no more per-app subdomain sites).
+# GitHub Pages deploy for the kryptic.sh site. Project *pages* live under
+# /<app>/ on this domain; project *artifacts* that need a real build
+# pipeline get their own subdomain and publish from their own repo.
 # Pages are assembled from templates/ + content/ by build.py (stdlib-only
 # Python). App versions are no longer baked at build time — each page
 # fetches the latest release tag client-side from the GitHub API
 # (assets/js/site.js), so no version-cron is needed.
 #
-# buffr's mdBook docs are also served here, at /buffr/docs/: the build
-# checks out kryptic-sh/buffr and runs `mdbook build` against its
-# docs/ + book.toml. The daily cron picks up docs edits made in the
-# buffr repo without a commit here.
+# This workflow has no cross-repo dependencies. It used to build buffr's
+# mdBook docs by checking that repo out, which meant a broken SUMMARY.md
+# link there failed *this* deploy, and docs edits only went live on a daily
+# cron here. buffr now publishes its own book to buffr.kryptic.sh, and
+# crcbl its demos to crcbl.kryptic.sh — both keep the build next to the
+# code, and this site is prose again. /buffr/docs/ redirects out.
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
+  # No schedule: the daily cron existed only to pick up buffr docs edits made
+  # without a commit here, and those are published from the buffr repo now.
   workflow_dispatch: {}
   push:
     branches: [main]
@@ -53,36 +56,6 @@ jobs:
       - name: Build
         run: python3 build.py
 
-      - name: Check out buffr (docs source)
-        uses: actions/checkout@v6
-        with:
-          repository: kryptic-sh/buffr
-          path: _buffr
-
-      - name: Install mdBook
-        run: |
-          set -euo pipefail
-          version="0.4.40"
-          mkdir -p "$HOME/.local/bin"
-          curl -sSL "https://github.com/rust-lang/mdBook/releases/download/v${version}/mdbook-v${version}-x86_64-unknown-linux-gnu.tar.gz" \
-            | tar -xz -C "$HOME/.local/bin"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Build buffr docs into /buffr/docs/
-        run: |
-          set -euo pipefail
-          missing=0
-          while IFS= read -r path; do
-            if [ -n "$path" ] && [ ! -f "_buffr/docs/$path" ]; then
-              echo "::error::SUMMARY.md references missing file: docs/$path"
-              missing=1
-            fi
-          done < <(grep -oE '\(\./[^)]+\)' _buffr/docs/SUMMARY.md | sed 's/(\.\///;s/)$//')
-          test "$missing" -eq 0
-          mdbook build _buffr
-          mkdir -p dist/buffr/docs
-          cp -a _buffr/docs-site/. dist/buffr/docs/
-
       - name: Sanity-check output
         run: |
           set -euo pipefail
@@ -91,10 +64,9 @@ jobs:
           test -f dist/.nojekyll
           test -f dist/assets/css/base.css
           test -f dist/assets/js/site.js
-          for app in sqeel buffr hjkl inbx hodl pikr gpur crcbl hrdr infr; do
-            test -f "dist/$app/index.html" || { echo "::error::missing dist/$app/index.html"; exit 1; }
+          for app in sqeel buffr hjkl inbx hodl pikr gpur crcbl hrdr infr krypt; do
+            test -f "dist/projects/$app/index.html" || { echo "::error::missing dist/projects/$app/index.html"; exit 1; }
           done
-          test -f dist/buffr/docs/index.html
           if grep -rn '{{' dist --include='*.html'; then
             echo "::error::unsubstituted template vars in dist/"
             exit 1
