@@ -116,9 +116,11 @@ def nav_html(links) -> str:
     for link in links:
         href, label = link["href"], link["label"]
         if href.startswith("http"):
-            parts.append(
-                f'<a href="{href}" target="_blank" rel="noopener">{label} ↗</a>'
-            )
+            # No `target="_blank"`. Whether a link opens in a new tab is the
+            # reader's call — ctrl/middle click, or the context menu — and a
+            # page that decides it for them takes away the back button. The
+            # arrow still marks the link as leaving the site.
+            parts.append(f'<a href="{href}">{label} ↗</a>')
         else:
             parts.append(f'<a href="{href}">{label}</a>')
     return "\n        ".join(parts)
