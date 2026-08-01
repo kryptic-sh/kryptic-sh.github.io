@@ -22,7 +22,7 @@
     "@type": "SoftwareApplication",
     "name": "gpur",
     "description": "btop-style GPU monitor for the terminal. An nvtop replacement for NVIDIA, AMD, Intel, and Apple GPUs on Linux, macOS, and Windows.",
-    "url": "https://www.kryptic.sh/gpur/",
+    "url": "https://www.kryptic.sh/projects/gpur/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -207,8 +207,10 @@ meta-->
       <h4>NVIDIA · AMD · Intel · Apple</h4>
       <p>
         One binary probes NVML, amdgpu sysfs, i915/xe fdinfo, IOAccelerator, and
-        Windows PDH in order and runs the first backend that answers. No
-        per-vendor builds.
+        Windows PDH — and <em>every</em> backend that finds devices runs, not
+        just the first. An NVIDIA dGPU beside an AMD APU lists both cards in one
+        list and one process table; the header reads <code>[multi]</code> and
+        names each driver. No per-vendor builds.
       </p>
     </div>
     <div class="feat">
@@ -288,17 +290,33 @@ meta-->
         foldable GPU cards included.
       </p>
     </div>
+    <div class="feat">
+      <div class="icon">10 — HONESTY</div>
+      <h4>Unknown is not zero</h4>
+      <p>
+        A reading the backend could not take renders <code>n/a</code> in the
+        table and <code>null</code> in <code>--json</code> / <code>--log</code>,
+        never a confident <code>0</code> — NVML reports no per-process memory
+        under WDDM, and an unprivileged fdinfo sweep cannot see another user's
+        processes. Unmeasured rows sink below measured ones in both sort
+        directions, and a graph sample that was never taken draws its own dimmed
+        glyph instead of a flat floor.
+      </p>
+    </div>
   </div>
 </section>
 
 <section id="backends">
   <h2>backends</h2>
-  <h3>One trait, one impl per vendor. Probed in order.</h3>
+  <h3>One trait, one impl per vendor. All of them at once.</h3>
   <p style="color: var(--fg-muted); margin: 0 0 24px">
-    Probe order: nvml → amdgpu → intel → ioaccel → pdh. The AMD Linux path is
-    battle-tested on real hardware; the macOS IOKit backend returns live data;
-    Intel and Windows backends are implemented, CI-exercised, and awaiting
-    real-GPU reports.
+    Probe order: nvml → amdgpu → intel → ioaccel, then pdh as a filtered peer.
+    Each vendor backend claims only its own PCI vendor's devices, so every one
+    that answers contributes cards no other reports and nothing is counted
+    twice. The AMD Linux path is the one exercised on real hardware; the NVIDIA,
+    Intel, macOS and Windows backends are implemented and their parsers are
+    tested against recorded fixtures, but no CI runner has a usable GPU — so
+    real-GPU reports are very welcome.
   </p>
   <div class="backends">
     <div class="backend">
@@ -337,8 +355,10 @@ meta-->
       <div class="plat">Windows</div>
       <div class="name">pdh</div>
       <div class="meta">
-        GPU Engine / Adapter Memory counters + DXGI — Task Manager's numbers as
-        the vendor-generic fallback. Utilization and memory only.
+        GPU Engine / Adapter Memory counters + DXGI — Task Manager's numbers,
+        vendor-generic. Runs beside the vendor backends, told which PCI vendors
+        they claimed, so it reports only the adapters left over: utilization,
+        memory, and split encode/decode.
       </div>
     </div>
     <div class="backend">

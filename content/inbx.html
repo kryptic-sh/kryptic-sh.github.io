@@ -22,7 +22,7 @@
     "@type": "SoftwareApplication",
     "name": "inbx",
     "description": "Modal-vim email client. IMAP, Gmail, Outlook, JMAP. Rust workspace.",
-    "url": "https://www.kryptic.sh/inbx/",
+    "url": "https://www.kryptic.sh/projects/inbx/",
     "applicationCategory": "CommunicationApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -156,25 +156,13 @@ meta-->
   }
   .mlist li {
     display: grid;
-    grid-template-columns: 28px 24px 14ch 1fr 70px;
+    grid-template-columns: 24px 14ch 1fr 70px;
     gap: 10px;
     padding: 4px 14px;
     align-items: baseline;
   }
   .mlist li.sel {
     background: #1a2138;
-  }
-  .mlist .hint {
-    display: inline-block;
-    background: var(--orange);
-    color: #2a1a0a;
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 11px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    line-height: 1.4;
-    text-align: center;
   }
   .mlist .flag {
     color: var(--fg-muted);
@@ -240,10 +228,6 @@ meta-->
     font-size: 12px;
     letter-spacing: 0.08em;
   }
-  .mode-badge.hint {
-    background: var(--orange);
-    color: #2a1a0a;
-  }
   .cmdline .info {
     flex: 1;
     font-size: 12px;
@@ -279,7 +263,7 @@ meta-->
 
   @media (max-width: 640px) {
     .mlist li {
-      grid-template-columns: 28px 22px 1fr 60px;
+      grid-template-columns: 22px 1fr 60px;
     }
     .mlist .subj {
       display: none;
@@ -329,7 +313,6 @@ meta-->
       </div>
       <ul class="mlist">
         <li class="sel">
-          <span class="hint">a</span>
           <span class="flag unread">●</span>
           <span class="from unread">GitHub</span>
           <span class="subj"
@@ -339,14 +322,12 @@ meta-->
           <span class="when">2m</span>
         </li>
         <li>
-          <span class="hint">s</span>
           <span class="flag star">★</span>
           <span class="from unread">Linus T.</span>
           <span class="subj">Re: Maildir layout — looks fine, ship it</span>
           <span class="when">14m</span>
         </li>
         <li>
-          <span class="hint">d</span>
           <span class="flag unread">●</span>
           <span class="from unread">Fastmail</span>
           <span class="subj"
@@ -355,14 +336,12 @@ meta-->
           <span class="when">1h</span>
         </li>
         <li>
-          <span class="hint">f</span>
           <span class="flag">·</span>
           <span class="from">cron daemon</span>
           <span class="subj">[backup] nightly snapshot complete (124 GB)</span>
           <span class="when">3h</span>
         </li>
         <li>
-          <span class="hint">g</span>
           <span class="flag">·</span>
           <span class="from">Stripe</span>
           <span class="subj"
@@ -372,7 +351,6 @@ meta-->
           <span class="when">yest</span>
         </li>
         <li>
-          <span class="hint">h</span>
           <span class="flag">·</span>
           <span class="from">rust-announce</span>
           <span class="subj">Rust 1.95.0 released — let-chains stabilized</span>
@@ -381,8 +359,10 @@ meta-->
       </ul>
     </div>
     <div class="cmdline">
-      <span class="mode-badge hint">HINT</span>
-      <span class="info">press a letter to open · esc to cancel</span>
+      <span class="mode-badge">NORMAL</span>
+      <span class="info"
+        >j/k move · Enter open · c compose · r reply · / search · ? help</span
+      >
       <span class="acct">● fastmail (idle)</span>
     </div>
   </div>
@@ -396,16 +376,24 @@ meta-->
       <div class="icon">01 — INPUT</div>
       <h4>Modal everything</h4>
       <p>
-        Normal/insert/visual modes in the message list, the reader, and the
-        composer. Real motions, real text objects, real ex commands.
+        Vim navigation through the list and the reader —
+        <kbd>j</kbd>/<kbd>k</kbd>, <kbd>h</kbd>/<kbd>l</kbd>,
+        <kbd>gg</kbd>/<kbd>G</kbd>, <kbd>Tab</kbd> between panes — and a
+        composer that is a real modal editor, with its own motions, text objects
+        and ex commands.
       </p>
     </div>
     <div class="feat">
-      <div class="icon">02 — SELECT</div>
-      <h4>Hint mode</h4>
+      <div class="icon">02 — KEYS</div>
+      <h4>One keymap table</h4>
       <p>
-        Press <kbd>f</kbd>, every visible message gets a label. Type the label,
-        you're in the thread. No j-spamming.
+        Every chord lives in a single data-driven bind table — the dispatcher
+        and the <kbd>?</kbd> help overlay read the same rows, so no key is
+        defined twice. <kbd>/</kbd> runs an FTS search with
+        <kbd>n</kbd>/<kbd>N</kbd>, <kbd>m</kbd> and <kbd>y</kbd> open move /
+        copy pickers, <kbd>&lt;Space&gt;F</kbd> does folder
+        create-rename-delete, and <kbd>&lt;Space&gt;R</kbd> marks a whole folder
+        read.
       </p>
     </div>
     <div class="feat">
@@ -471,7 +459,9 @@ meta-->
       <p>
         Per-account <code>pgp.key_source</code> picks between the system GnuPG
         keyring or inbx-managed keys on disk. Composer signs and encrypts
-        inline.
+        inline, via rpgp. Public keys resolve over WKD; Autocrypt 1.1 headers
+        are harvested on sync, so a correspondent advertising
+        <code>prefer-encrypt=mutual</code> gets encrypted replies by default.
       </p>
     </div>
     <div class="feat">
@@ -481,6 +471,17 @@ meta-->
         Implicit TLS or STARTTLS only. Never falls through to plaintext. Remote
         content blocked by default. HTML sanitized via ammonia. Keyring backend
         selected per platform — no mock-keystore fallback.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — TRUST</div>
+      <h4>Who actually sent this</h4>
+      <p>
+        The reader parses the <code>Authentication-Results</code> header (RFC
+        8601) and surfaces the SPF / DKIM / DMARC verdicts next to a handful of
+        cheap phishing signals, flags 1×1 tracker pixels and known beacon hosts
+        by name, and detects PGP / S/MIME parts. Read receipts are RFC 8098
+        MDNs, and <code>List-Unsubscribe</code> supports RFC 8058 one-click.
       </p>
     </div>
   </div>
@@ -507,8 +508,8 @@ meta-->
     <div class="prov">
       <div class="name">Outlook / M365</div>
       <div class="how">
-        OAuth2 today, Microsoft Graph (<code>/me/messages</code>,
-        <code>/me/sendMail</code>) tomorrow. Tenant-aware.
+        OAuth2 IMAP/SMTP, or native Microsoft Graph (<code>/me/messages</code>,
+        <code>/me/sendMail</code>) with delta sync. Tenant-aware.
       </div>
     </div>
     <div class="prov">
@@ -526,9 +527,9 @@ meta-->
   <h3>Prebuilt binaries on every tagged release.</h3>
   <p class="install-note">
     macOS via Homebrew tap, Arch via AUR, Alpine .apk, or grab a prebuilt
-    binary. Linux (x86_64) — .tar.gz. macOS (Apple Silicon) — .tar.gz. Windows
-    (x64) — .zip. SHA-256 sidecars on every artifact. More targets land as the
-    workspace stabilises.
+    binary. Linux x86_64 (glibc 2.28 and musl) — .tar.gz. macOS, Apple Silicon
+    and Intel — .tar.gz. Windows x64 — .zip. SHA-256 sidecars on every artifact.
+    More targets land as the workspace stabilises.
   </p>
   <div class="cta">
     <a

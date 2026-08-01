@@ -22,7 +22,7 @@
     "@type": "SoftwareApplication",
     "name": "hodl",
     "description": "Light crypto wallet for the terminal. BIP-39 seed restores Bitcoin, Ethereum, BSC, Monero, NavCoin, and major Bitcoin forks (LTC, DOGE, BCH).",
-    "url": "https://www.kryptic.sh/hodl/",
+    "url": "https://www.kryptic.sh/projects/hodl/",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -334,7 +334,7 @@ meta-->
     </div>
     <div class="statusbar">
       <span class="mode-badge">NORMAL</span>
-      <span>j/k move · enter open · s send · r receive · q quit</span>
+      <span>p chain · r receive · s send · b book · S settings · q lock</span>
     </div>
   </div>
 </header>
@@ -424,6 +424,18 @@ meta-->
         every chain backend. Your money, your business.
       </p>
     </div>
+    <div class="feat">
+      <div class="icon">10 — SCREENS</div>
+      <h4>Address book, QR receive, in-TUI settings</h4>
+      <p>
+        <kbd>b</kbd> opens a saved-contact list (label / address / chain / note
+        in <code>address_book.toml</code>), <kbd>r</kbd> draws the receive
+        address as a half-block terminal QR with an OSC-52 yank that survives
+        SSH, and <kbd>S</kbd> edits endpoints, the Tor proxy, the Argon2id KDF
+        preset and the idle lock timeout without leaving the app — written to
+        disk only on an explicit Save.
+      </p>
+    </div>
   </div>
 </section>
 
@@ -469,7 +481,7 @@ meta-->
     <div class="chain tier1">
       <div class="sym">LTC · slip-44 2</div>
       <div class="name">Litecoin</div>
-      <div class="meta">Electrum-LTC · BIP-49 P2SH-segwit</div>
+      <div class="meta">Electrum-LTC · BIP-84 native segwit (44/49 too)</div>
     </div>
     <div class="chain tier1">
       <div class="sym">DOGE · slip-44 3</div>

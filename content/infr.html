@@ -18,7 +18,7 @@
     "@type": "SoftwareApplication",
     "name": "infr",
     "description": "Pure-Rust LLM inference engine, Vulkan-first. Runs GGUF models on any mainstream GPU without a CUDA toolchain and serves an OpenAI-compatible HTTP API with SSE streaming and tool calls.",
-    "url": "https://www.kryptic.sh/infr/",
+    "url": "https://www.kryptic.sh/projects/infr/",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS",
     "programmingLanguage": "Rust",
@@ -129,8 +129,8 @@ meta-->
   </p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
     <code>pull</code> / <code>run</code> / <code>serve</code> /
-    <code>bench</code> over one engine. OpenAI-compatible <code>/v1</code> API
-    with SSE streaming and tool calls — a local backend for
+    <code>multi</code> / <code>bench</code> over one engine. OpenAI-compatible
+    <code>/v1</code> API with SSE streaming and tool calls — a local backend for
     <a href="/projects/hrdr/">hrdr</a>, opencode, and Claude Code CLI. The only
     non-Rust parts are the Vulkan driver calls (<code>ash</code>) and the SPIR-V
     compute shaders.
@@ -182,8 +182,10 @@ meta-->
       <h4>Vulkan-first, Metal too</h4>
       <p>
         AMD / NVIDIA / Intel via Vulkan cooperative-matrix matmul. Apple gets a
-        native Metal backend (<code>INFR_METAL=1</code>) — simdgroup-matrix GEMM
-        + flash attention, within ~1.3–1.5× of llama.cpp Metal on M3 Pro.
+        native Metal backend (<code>--dev metal</code>) — simdgroup-matrix GEMM
+        + flash attention, within ~1.3–1.5× of llama.cpp Metal on M3 Pro. A CPU
+        reference backend (<code>--dev cpu</code>) runs every architecture and
+        is what the GPU output is checked against.
       </p>
     </div>
     <div class="feat">
@@ -192,8 +194,11 @@ meta-->
       <p>
         <code>infr serve</code> — axum + SSE.
         <code>/v1/chat/completions</code> and <code>/v1/models</code>, streaming
-        deltas, tool calls with <code>finish_reason: "tool_calls"</code>. Works
-        with <a href="/projects/hrdr/">hrdr</a>, opencode, and Claude Code CLI.
+        deltas, tool calls with <code>finish_reason: "tool_calls"</code> (a
+        forced <code>tool_choice</code> is grammar-constrained through
+        llguidance). Optional bearer auth (<code>INFR_API_KEY</code>) gates both
+        <code>/v1</code> routes but never <code>/health</code>. Works with
+        <a href="/projects/hrdr/">hrdr</a>, opencode, and Claude Code CLI.
       </p>
     </div>
     <div class="feat">
@@ -222,29 +227,33 @@ meta-->
       <h4>Benchmarks you can compare</h4>
       <p>
         <code>infr bench</code> matches <code>llama-bench</code>'s
-        <code>-p/-n/-d/-r</code> flags; <code>infr compare</code> runs both
-        tools on coding-agent-shaped workloads. Competitive with llama.cpp at
-        long context.
+        <code>-p/-n/-d/-r/-pg/-ngl</code> flags and its
+        <code>-o json</code> shape; <code>infr compare --sweep</code> runs both
+        tools across your model cache. On an RX 7900 XTX, decode — the
+        reproducible half — wins 29 of 35 rows at <code>tg128</code> and 24 of
+        35 at <code>tg64@d4096</code>; the full table names the losses too.
       </p>
     </div>
     <div class="feat">
       <div class="icon">07 — PROFILE</div>
-      <h4>Per-op GPU profiling</h4>
+      <h4>Per-op device profiling</h4>
       <p>
-        <code>INFR_PROF2=1</code> prints GPU timestamp-query blocks per submit,
-        tagged by op label — <code>attn_flash</code>,
-        <code>expert_gateup</code>, <code>lm_head</code>, … Sum a label for its
-        total.
+        <code>INFR_PROF_OPS=1</code> timestamps every dispatch — on Vulkan,
+        Metal and CPU alike — labelled with its kernel name (plus role overrides
+        like <code>expert_gateup</code>): one block per submit, then one
+        aggregated report at exit. <code>INFR_PROF_OP_SHAPES=1</code>
+        itemizes the GEMV/GEMM buckets by shape.
       </p>
     </div>
     <div class="feat">
       <div class="icon">08 — VRAM</div>
-      <h4>MoE expert CPU offload</h4>
+      <h4>Paged experts, spillable KV</h4>
       <p>
-        <code>INFR_NCMOE=N</code> offloads MoE experts to the CPU for tight
-        VRAM. <code>INFR_MAX_CTX</code>, <code>INFR_MAX_NEW</code>, and
-        <code>INFR_TEMP</code> / <code>TOP_K</code> / <code>TOP_P</code> (greedy
-        at <code>TEMP=0</code>) tune the rest.
+        MoE experts that don't fit stream through a paged VRAM cache —
+        <code>INFR_CACHE=19g</code> (or <code>80%</code>) forces and sizes it,
+        which is how a 37 GB Llama 4 Scout runs on a 24 GB card. The KV cache
+        can be stored as <code>q8_0</code> and can overflow to system RAM when
+        VRAM runs out.
       </p>
     </div>
     <div class="feat">
@@ -254,6 +263,40 @@ meta-->
         Compute sits behind a <code>Backend</code> trait — Vulkan via ash +
         SPIR-V, native Metal via MSL, CUDA addable later. Weights behind
         <code>WeightSource</code> — GGUF now, safetensors later.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">10 — CONFIG</div>
+      <h4>One resolved config</h4>
+      <p>
+        Device, context, sampling, KV format, paging budgets, every kernel-tier
+        switch — one typed value resolved once at startup from four layers,
+        later wins:
+        <code>defaults &lt; infr.toml &lt; INFR_* env &lt; flags</code>. Knobs
+        without a dedicated flag are reachable with
+        <code>--set kernels.vulkan.flash_splits=2</code>, and a flag that
+        collides with a <code>--set</code> wins and says so.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — SLOTS</div>
+      <h4>Concurrent slots, many models</h4>
+      <p>
+        <code>infr serve --parallel N</code> runs N generation slots, each with
+        its own KV cache, divided out of the same VRAM budget one slot fits —
+        raising it can't OOM a box that <code>-np 1</code> fit.
+        <code>infr multi qwen@Vulkan0 gemma@Vulkan1</code> hosts several models
+        on one server, each pinned to its own GPU, routed by model name.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">12 — SPLIT</div>
+      <h4>One model, several GPUs</h4>
+      <p>
+        <code>multi.pipeline</code> and <code>multi.tensor_parallel</code> (both
+        want ≥ 2 devices) plus <code>multi.expert_parallel</code> split a single
+        model across cards, moving tensors GPU-to-GPU directly or staging them
+        through host RAM.
       </p>
     </div>
   </div>
@@ -298,9 +341,7 @@ meta-->
     <div class="model">
       <div class="arch">gguf · qwen3moe</div>
       <div class="name">Qwen3 MoE</div>
-      <div class="meta">
-        softmax router · top-k experts · expert CPU offload
-      </div>
+      <div class="meta">softmax router · top-k experts · paged experts</div>
     </div>
     <div class="model">
       <div class="arch">gguf · gemma3</div>
@@ -349,8 +390,8 @@ meta-->
   <h3>Early WIP — build from source.</h3>
   <p class="install-note">
     No packaged releases yet. You need a Rust toolchain and a Vulkan driver (AMD
-    / NVIDIA / Intel); on Apple, the native Metal backend is enabled with
-    <code>INFR_METAL=1</code>. <code>infr run</code> and
+    / NVIDIA / Intel); on Apple, pick the native Metal backend with
+    <code>--dev metal</code>. <code>infr run</code> and
     <code>infr serve</code> auto-pull the model if it isn't cached.
   </p>
   <div class="cta">
@@ -384,7 +425,7 @@ meta-->
     ><span class="cm"># terminal chat (auto-pulls the GGUF from HuggingFace)</span>
 <span class="ok">$</span> infr run unsloth/Qwen3-1.7B-GGUF:Q4_K_M "What is bash?"
 
-<span class="cm"># MoE (expert CPU offload with INFR_NCMOE=N for tight VRAM)</span>
+<span class="cm"># MoE (experts page through the VRAM cache when they don't fit)</span>
 <span class="ok">$</span> infr run unsloth/Qwen3-30B-A3B-GGUF:Q4_K_M "Explain MoE routing."
 
 <span class="cm"># serve the OpenAI-compatible API</span>

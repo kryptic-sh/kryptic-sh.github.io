@@ -22,7 +22,7 @@
     "@type": "SoftwareApplication",
     "name": "krypt",
     "description": "Cross-platform dotfiles manager. A single Rust binary that clones, deploys, and syncs dotfiles on Linux, macOS, and Windows from a declarative .krypt.toml.",
-    "url": "https://www.kryptic.sh/krypt/",
+    "url": "https://www.kryptic.sh/projects/krypt/",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -148,8 +148,8 @@ meta-->
 
 <span class="ok">$</span> krypt diff
 <span class="dim">M</span> ~/.config/nvim/init.lua   <span class="dim">deployed ≠ staged</span>
-<span class="ok">$</span> krypt adopt ~/.config/nvim/init.lua
-<span class="ok">✓</span> pulled hand-edit back into the repo</pre>
+<span class="ok">$</span> krypt adopt-edits
+<span class="ok">✓</span> adopted edits for 1 entries <span class="dim">(70 clean, 0 missing)</span></pre>
   </div>
 </header>
 
@@ -170,17 +170,21 @@ meta-->
       <h4>Copy-based deploy + drift</h4>
       <p>
         Replaces <code>stow</code>. Every deployed file is recorded in a
-        manifest, so <code>krypt diff</code> tells you exactly what drifted and
-        <code>krypt adopt</code> pulls a hand-edit back into the repo.
+        manifest, so <code>krypt diff</code> tells you exactly what drifted,
+        <code>krypt adopt-edits</code> copies those hand-edits back into the
+        repo, and <code>krypt adopt &lt;path&gt;</code> imports a new file and
+        prints the <code>[[link]]</code> block for it.
       </p>
     </div>
     <div class="feat">
       <div class="icon">03 — DECLARE</div>
       <h4>Declarative <code>.krypt.toml</code></h4>
       <p>
-        Links, packages, prompts, commands, and hooks in one schema.
-        <code>krypt validate</code> parses it and reports schema errors before
-        anything touches your home directory.
+        Links, templates, packages, prompts, commands, and hooks in one schema,
+        splittable across files with <code>include</code> globs.
+        <code>krypt validate</code> runs the whole include +
+        <code>${VAR}</code> pipeline, so a typo fails there instead of at first
+        dispatch.
       </p>
     </div>
     <div class="feat">
@@ -206,8 +210,11 @@ meta-->
       <div class="icon">06 — WIZARD</div>
       <h4>First-run <code>[prompts.*]</code></h4>
       <p>
-        <code>krypt setup</code> walks an interactive wizard — git identity,
-        machine profile, whatever you declare — then installs deps and deploys.
+        <code>krypt setup</code> walks the wizard your
+        <code>[prompts.*]</code> sections declare — git identity, machine
+        profile, whatever you write — and writes the answers through the
+        <code>[[template]]</code> files that name them. Packages are
+        <code>krypt deps</code>, deploy is <code>krypt link</code>.
       </p>
     </div>
     <div class="feat">
@@ -234,15 +241,21 @@ meta-->
       <p>
         Uncommitted work at pull time gets stashed via <code>gix-stash</code>,
         pulled over, and popped back. Conflicts surface with the stash OID so
-        you can apply by hand. Opt out with <code>--no-stash</code>.
+        you can apply by hand. Opt out with <code>--no-stash</code>. Clone and
+        pull run through <code>gix</code> — no <code>git</code> binary, HTTPS
+        remotes only.
       </p>
     </div>
     <div class="feat">
       <div class="icon">10 — NOTIFY</div>
       <h4>Platform-correct notifications</h4>
       <p>
-        <code>krypt notify &lt;title&gt; &lt;body&gt;</code> speaks libnotify /
-        NSUserNotification / Windows toast so your scripts don't have to.
+        <code>krypt notify &lt;title&gt; &lt;body&gt;</code> picks the backend
+        the host actually has: <code>notify-send</code> on Linux,
+        <code>terminal-notifier</code> or <code>osascript</code> on macOS,
+        PowerShell <code>MessageBox</code> on Windows (no BurntToast install),
+        stderr when there is nothing. Pin one with
+        <code>[meta] notify_backend</code>.
       </p>
     </div>
     <div class="feat">
@@ -281,7 +294,11 @@ meta-->
       </tr>
       <tr>
         <td>krypt setup</td>
-        <td>interactive wizard — prompts, then dependencies</td>
+        <td>interactive <code>[prompts.*]</code> wizard</td>
+      </tr>
+      <tr>
+        <td>krypt deps</td>
+        <td>install <code>[[deps]]</code> via the host's package manager</td>
       </tr>
       <tr>
         <td>krypt link</td>
@@ -305,11 +322,23 @@ meta-->
       </tr>
       <tr>
         <td>krypt adopt &lt;path&gt;</td>
-        <td>pull a hand-edited file back into the repo</td>
+        <td>import a file into the repo, print its <code>[[link]]</code></td>
+      </tr>
+      <tr>
+        <td>krypt adopt-edits</td>
+        <td>sync every drifted deployed file back into the repo</td>
       </tr>
       <tr>
         <td>krypt unlink / relink</td>
         <td>reverse or refresh a deploy</td>
+      </tr>
+      <tr>
+        <td>krypt paths</td>
+        <td>print every resolved path variable</td>
+      </tr>
+      <tr>
+        <td>krypt notify &lt;title&gt; &lt;body&gt;</td>
+        <td>desktop notification on whatever OS you're on</td>
       </tr>
       <tr>
         <td>krypt menu [name]</td>
@@ -339,10 +368,14 @@ meta-->
   <h2>install</h2>
   <h3>Every channel drops a <code>krypt</code> on your <code>$PATH</code>.</h3>
   <p class="install-note">
-    Arch via AUR, macOS via the Homebrew tap, Windows via Scoop, or
-    <code>cargo install</code> anywhere. The <code>krypt</code> name on
-    crates.io is held by an unrelated stale project, so the binary crate is
-    published as <code>krypt-cli</code> for now.
+    Arch via AUR, macOS via the Homebrew tap, Windows via Scoop, or the prebuilt
+    binaries on the release page — those four track every tag. The
+    <code>krypt</code> name on crates.io is held by an unrelated stale project,
+    so the binary crate is published as <code>krypt-cli</code>, and that one
+    channel is paused: the <code>gix-stash</code> plumbing krypt needs still
+    lives on a fork, which <code>cargo publish</code> won't accept, so
+    <code>cargo install krypt-cli</code> currently lands an older build.
+    Publishing resumes when the upstream gitoxide PR merges.
   </p>
   <div class="cta">
     <a
@@ -373,7 +406,7 @@ meta-->
 <span class="ok">$</span> scoop bucket add kryptic https://github.com/kryptic-sh/scoop-bucket
 <span class="ok">$</span> scoop install krypt
 
-<span class="cm"># any platform (crates.io)</span>
+<span class="cm"># any platform (crates.io — publishing paused, older build)</span>
 <span class="ok">$</span> cargo install krypt-cli</pre>
   </div>
   <div class="terminal install-sample">
@@ -386,6 +419,7 @@ meta-->
       class="install-code"
     ><span class="ok">$</span> krypt init https://github.com/you/dotfiles
 <span class="ok">$</span> krypt setup
+<span class="ok">$</span> krypt deps
 <span class="ok">$</span> krypt link
 <span class="cm"># then, forever after:</span>
 <span class="ok">$</span> krypt update</pre>

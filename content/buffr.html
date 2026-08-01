@@ -19,7 +19,7 @@
     "@type": "SoftwareApplication",
     "name": "buffr",
     "description": "Vim-inspired browser. Native, GPU-accelerated. Rust + CEF.",
-    "url": "https://www.kryptic.sh/buffr/",
+    "url": "https://www.kryptic.sh/projects/buffr/",
     "applicationCategory": "WebBrowser",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -266,7 +266,7 @@ meta-->
     <span class="badge live">● <span data-version="buffr">…</span></span>
     <span class="badge">MIT</span>
     <span class="badge">Rust + CEF</span>
-    <span class="badge">Wayland only</span>
+    <span class="badge">Wayland on Linux</span>
   </div>
   <h1>
     Vim-inspired<br />
@@ -359,11 +359,13 @@ meta-->
       <p>
         <code>buffr-engine</code> defines the <code>BrowserEngine</code> trait
         and <code>buffr-cef</code> wraps Chromium Embedded Framework — the
-        backend every release ships. <code>buffr-webkit</code> drives WPE WebKit
-        natively through the same trait (Wayland subsurface compositing, DMA-BUF
-        bridging) and is built separately since it needs
-        <code>wpewebkit-2.0</code> system deps. Per-domain rules in config
-        already route tabs to a named engine instance.
+        backend every release ships, and the only one
+        <code>[engines]</code> accepts today. <code>buffr-webkit</code> is an
+        experimental WPE WebKit backend behind the same trait (Wayland
+        subsurface compositing, DMA-BUF bridging), excluded from the workspace
+        and off CI because it needs <code>wpewebkit-2.0</code> system deps.
+        Per-domain rules in config already route tabs to a named engine
+        instance.
       </p>
     </div>
     <div class="feat">
@@ -379,10 +381,12 @@ meta-->
       <h4>Per-engine on-disk layout</h4>
       <p>
         Each engine instance gets its own
-        <code>~/.cache/buffr/engines/&lt;id&gt;/</code> +
-        <code>~/.local/share/buffr/engines/&lt;id&gt;/profile/</code>. Distinct
-        cookies, cache, IndexedDB. Auto-migrates pre-0.11 profiles on first
-        launch.
+        <code>~/.local/share/buffr/engines/&lt;id&gt;/</code> — distinct
+        cookies, cache, IndexedDB. Profile and cache share that root
+        deliberately: XDG says <code>~/.cache</code> may be lost without
+        warning, and CEF only honours a per-context cache path that sits under
+        one common root. Same layout on macOS and Windows — no
+        <code>%APPDATA%</code> special case.
       </p>
     </div>
     <div class="feat">
@@ -408,8 +412,24 @@ meta-->
       <div class="icon">08 — PRIVACY</div>
       <h4>Zero telemetry</h4>
       <p>
-        No analytics. No phone-home. <code>--private</code> mode tears down all
+        No analytics, no telemetry endpoint — the usage counters are opt-in, off
+        by default, and only ever write a local JSON file. The daily update
+        check against GitHub releases is the only network request buffr makes on
+        its own, and <code>updates.enabled = false</code> turns it off.
+        <code>--private</code> mode runs the stores in memory and tears down all
         engine profiles into a per-pid temp tree on exit.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — STATE</div>
+      <h4>Your history is a database</h4>
+      <p>
+        History, bookmarks, downloads, per-origin permissions and per-domain
+        zoom each persist to their own SQLite file under
+        <code>~/.local/share/buffr/</code> — frecency-ranked history search,
+        bookmark tags with Netscape HTML import, WAL mode, forward-only schema
+        migrations. Every store has a <code>--list-*</code> CLI flag, so the
+        data is yours without opening the browser.
       </p>
     </div>
   </div>

@@ -22,7 +22,7 @@
     "@type": "SoftwareSourceCode",
     "name": "hjkl",
     "description": "A vim-style modal editor in Rust. Built on a reusable engine, rope buffer, and editor primitives.",
-    "url": "https://www.kryptic.sh/hjkl/",
+    "url": "https://www.kryptic.sh/projects/hjkl/",
     "programmingLanguage": "Rust",
     "license": "https://opensource.org/licenses/MIT",
     "codeRepository": "https://github.com/kryptic-sh/hjkl"
@@ -255,7 +255,7 @@ meta-->
       <h4>One FSM, many surfaces</h4>
       <p>
         Same FSM that drives <a href="/projects/sqeel/">sqeel</a>,
-        <a href="/projects/hjkl/">hjkl</a>, and
+        <a href="/projects/buffr/">buffr</a>, and
         <a href="/projects/inbx/">inbx</a> drives the standalone hjkl editor.
       </p>
     </div>
@@ -327,12 +327,26 @@ meta-->
       <p>
         <code>tokyonight</code> (default), <code>catppuccin</code>,
         <code>gruvbox</code>, <code>nord</code>, <code>dracula</code>,
-        <code>onedark</code> via <code>:colorscheme</code>. Themes drive the
-        terminal background, with a <code>theme.transparent</code> override.
+        <code>onedark</code> via <code>:colorscheme</code> — plus the built-in
+        <code>dark</code> / <code>light</code>. Each switches UI chrome and
+        syntax together, and themes drive the terminal background with a
+        <code>theme.transparent</code> override.
       </p>
     </div>
     <div class="feat">
-      <div class="icon">10 — OPEN</div>
+      <div class="icon">10 — OPTIONS</div>
+      <h4><code>:set</code> that sticks</h4>
+      <p>
+        Every global <code>:set</code> option has a matching key under
+        <code>[options]</code> in <code>config.toml</code>, named exactly as
+        <code>:set</code> names it — and a <code>:set</code> from the command
+        bar is written straight back to your config file, preserving comments,
+        key order and quoting. Buffer-local options stay session-scoped. A
+        deliberate divergence from vim, where <code>:set</code> is transient.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — OPEN</div>
       <h4>MIT, all of it</h4>
       <p>Every crate, every adapter. Fork it, vendor it, ship it. No catch.</p>
     </div>
@@ -349,7 +363,7 @@ meta-->
     at a shared version. Most subsystems come as a pair: a renderer-agnostic
     core crate plus a <code>-tui</code> adapter, so a GUI host can take the
     model and leave the ratatui rendering behind. Add one line and go:
-    <code>hjkl-editor = "0.35"</code>.
+    <code>cargo add hjkl-editor</code>.
   </p>
   <div class="crates">
     <a class="crate" href="https://crates.io/crates/hjkl">

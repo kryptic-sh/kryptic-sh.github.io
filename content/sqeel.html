@@ -2,9 +2,9 @@
 {
   "slug": "sqeel",
   "repo": "sqeel",
-  "title": "sqeel — vim-native SQL client for Postgres, MySQL, SQLite",
-  "description": "Native Rust SQL client built for speed. First-class vim bindings, MySQL/Postgres/SQLite support, runs in your terminal. No Electron. No JVM. No bullshit.",
-  "keywords": "sql client, rust sql client, vim sql client, terminal sql client, tui sql, postgres client, mysql client, sqlite client, sqeel",
+  "title": "sqeel — vim-native SQL client for Postgres, MySQL, SQLite, DuckDB",
+  "description": "Native Rust SQL client built for speed. First-class vim bindings, MySQL/Postgres/SQLite/DuckDB support, runs in your terminal. No Electron. No JVM. No bullshit.",
+  "keywords": "sql client, rust sql client, vim sql client, terminal sql client, tui sql, postgres client, mysql client, sqlite client, duckdb client, sqeel",
   "accent": "#7ee787",
   "og_image": "/sqeel/og-image.png",
   "nav": [
@@ -20,8 +20,8 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "sqeel",
-    "description": "Native Rust SQL client with vim bindings. Runs in your terminal. Supports MySQL, Postgres, and SQLite.",
-    "url": "https://www.kryptic.sh/sqeel/",
+    "description": "Native Rust SQL client with vim bindings. Runs in your terminal. Supports MySQL, Postgres, SQLite, and DuckDB.",
+    "url": "https://www.kryptic.sh/projects/sqeel/",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -240,10 +240,11 @@ meta-->
       <div class="icon">04 — DB</div>
       <h4>MySQL · Postgres · SQLite · DuckDB</h4>
       <p>
-        Powered by sqlx + duckdb-rs. Per-file TOML connections, live switcher.
-        Query CSV / Parquet directly via DuckDB (<code
-          >SELECT * FROM 'data.csv'</code
-        >).
+        Powered by sqlx + duckdb-rs. Per-file TOML connections, live switcher. A
+        <code>duckdb:</code> URL (file or <code>duckdb::memory:</code>) puts
+        DuckDB's own reach at your fingertips —
+        <code>SELECT * FROM 'data.csv'</code>
+        over CSV / Parquet, no import step.
       </p>
     </div>
     <div class="feat">
@@ -252,7 +253,10 @@ meta-->
       <p>
         Each editor tab binds to its own database. Switching tabs swaps warm
         connection pools without reconnecting, in-flight queries on other
-        connections keep running, and bindings survive a restart.
+        connections keep running, and bindings survive a restart. Tabs pointed
+        somewhere other than the active connection carry a dim
+        <code>[conn]</code> suffix, so "which database is this about to hit" is
+        a glance, not a guess.
       </p>
     </div>
     <div class="feat">
@@ -272,7 +276,9 @@ meta-->
         LSP, with an auto-generated <code>sqls</code> config from the active
         connection. <kbd>K</kbd> hovers (markdown + GFM tables),
         <kbd>gd</kbd> goes to definition, errors jump the editor to
-        <code>line:col</code>.
+        <code>line:col</code>. No <code>sqls</code> on <code>$PATH</code>?
+        <code>:Anvil install sqls</code> fetches it into a local store — or turn
+        the offer off with <code>editor.lsp_auto_install = false</code>.
       </p>
     </div>
     <div class="feat">
@@ -354,6 +360,17 @@ meta-->
         (password masked) instead of showing the picker.
       </p>
     </div>
+    <div class="feat">
+      <div class="icon">17 — LIMIT</div>
+      <h4>Auto-LIMIT on bare SELECTs</h4>
+      <p>
+        A <code>SELECT</code> that doesn't limit itself gets
+        <code>LIMIT 100</code> appended, so a fat table never freezes the pane.
+        When the cap is what you're seeing, the result tab says
+        <code>first N rows — auto LIMIT</code> and headless mode notes it on
+        stderr. Tune or disable with <code>editor.default_row_limit</code>.
+      </p>
+    </div>
   </div>
 </section>
 
@@ -361,13 +378,14 @@ meta-->
   <h2>install</h2>
   <h3>Prebuilt binaries on every tagged release.</h3>
   <p class="install-note">
-    macOS via Homebrew tap, Arch via AUR, Alpine via .apk, or grab a prebuilt
-    binary. Linux (x86_64, aarch64, musl), macOS (Apple Silicon, Intel), Windows
-    (x86_64). Arch users: AUR <code>sqeel-bin</code>. SHA-256 sidecars on every
-    artifact, plus a <code>completions-man</code> tarball — bash, zsh, fish,
-    powershell, elvish, and nushell completions and a man page, all generatable
-    from the binary itself (<code>sqeel --completions zsh</code>,
-    <code>sqeel --man</code>).
+    macOS via Homebrew tap, Arch via AUR, crates.io, or grab a prebuilt binary.
+    Linux (x86_64, aarch64, musl), macOS (Apple Silicon, Intel), Windows
+    (x86_64). Arch users: AUR <code>sqeel-bin</code>. Alpine: the musl tarball
+    is a static drop-in (the <code>.apk</code> is built by the same pipeline but
+    didn't make the last tag). SHA-256 sidecars on every artifact, plus a
+    <code>completions-man</code> tarball — bash, zsh, fish, powershell, elvish,
+    and nushell completions and a man page, all generatable from the binary
+    itself (<code>sqeel --completions zsh</code>, <code>sqeel --man</code>).
   </p>
   <div class="cta">
     <a
@@ -406,12 +424,14 @@ meta-->
     <div class="bar">
       <span class="dot r"></span><span class="dot y"></span
       ><span class="dot g"></span>
-      <span class="title">sqeel — Alpine Linux</span>
+      <span class="title">sqeel — Alpine / musl</span>
     </div>
     <pre
       class="install-code"
-    ><span class="cm"># download .apk from https://github.com/kryptic-sh/sqeel/releases/latest</span>
-<span class="ok">$</span> apk add --allow-untrusted sqeel-*.apk</pre>
+    ><span class="cm"># grab sqeel-&lt;tag&gt;-x86_64-unknown-linux-musl.tar.gz from</span>
+<span class="cm"># https://github.com/kryptic-sh/sqeel/releases/latest — static, no libc chase</span>
+<span class="ok">$</span> tar xzf sqeel-*-x86_64-unknown-linux-musl.tar.gz
+<span class="ok">$</span> install -m755 sqeel /usr/local/bin/sqeel</pre>
   </div>
   <div class="terminal install-sample">
     <div class="bar">
@@ -419,7 +439,9 @@ meta-->
       ><span class="dot g"></span>
       <span class="title">sqeel — from source</span>
     </div>
-    <pre class="install-code"><span class="cm"># crates.io</span>
+    <pre
+      class="install-code"
+    ><span class="cm"># crates.io — the published crate can trail the newest tag</span>
 <span class="ok">$</span> cargo install sqeel
 
 <span class="cm"># or build from the repo</span>

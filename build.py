@@ -148,6 +148,13 @@ def render(layout: str, meta: dict, head_extra: str, content: str) -> str:
         if repo
         else '<a href="https://github.com/kryptic-sh">github</a>'
     )
+    # The structured-data URL is derived, not copied. It and `canonical` are the
+    # same fact, and when the pages moved to /projects/<slug>/ the canonical
+    # followed while eleven hand-written JSON-LD blocks kept pointing at URLs
+    # that now redirect. One source decides it.
+    jsonld = dict(meta["jsonld"])
+    jsonld["url"] = canonical
+
     subs = {
         "title": meta["title"],
         "description": meta["description"],
@@ -156,7 +163,7 @@ def render(layout: str, meta: dict, head_extra: str, content: str) -> str:
         "canonical": canonical,
         "og_image": meta.get("og_image", "/og-image.png"),
         "favicon_base": assets,
-        "jsonld": json.dumps(meta["jsonld"], indent=8).strip(),
+        "jsonld": json.dumps(jsonld, indent=8).strip(),
         "siblings": siblings_html(slug),
         "brand": brand_html(slug),
         "nav_links": nav_html(meta.get("nav", [])),

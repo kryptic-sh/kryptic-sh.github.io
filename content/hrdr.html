@@ -2,9 +2,9 @@
 {
   "slug": "hrdr",
   "repo": "hrdr",
-  "title": "hrdr — agentic coding harness. TUI + GUI. Rust.",
-  "description": "hrdr (Herder) — a fast agentic coding harness for OpenAI-compatible and Anthropic models. TUI and native GUI from one agent core. Adaptive tool set, sub-agents, persistent memory, prompt caching, guardrails that hard-block foot-guns. The vim layer is hjkl.",
-  "keywords": "hrdr, herder, agentic coding, coding agent, ai coding assistant, llm harness, openai compatible, anthropic, claude, tool calls, mcp, sub-agents, rust, tui, floem, ratatui, hjkl, infr, kryptic",
+  "title": "hrdr — agentic coding harness. TUI, web, headless. Rust.",
+  "description": "hrdr (Herder) — a fast agentic coding harness for OpenAI-compatible, Anthropic and Codex models. TUI, browser UI and headless runs from one agent core. Adaptive tool set, sub-agents, skills, persistent memory, an OS sandbox on by default, guardrails that hard-block foot-guns. The vim layer is hjkl.",
+  "keywords": "hrdr, herder, agentic coding, coding agent, ai coding assistant, llm harness, openai compatible, anthropic, claude, codex, tool calls, mcp, sub-agents, sandbox, landlock, seatbelt, skills, rust, tui, ratatui, hjkl, infr, kryptic",
   "accent": "#ff9e64",
   "og_image": "/og-image.png",
   "nav": [
@@ -21,8 +21,8 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "hrdr",
-    "description": "Agentic coding harness for OpenAI-compatible and Anthropic models. Drives a model through native tool calls to complete software-engineering tasks — TUI and native GUI from one agent core.",
-    "url": "https://www.kryptic.sh/hrdr/",
+    "description": "Agentic coding harness for OpenAI-compatible, Anthropic and Codex models. Drives a model through native tool calls to complete software-engineering tasks — TUI, browser UI and headless runs from one agent core.",
+    "url": "https://www.kryptic.sh/projects/hrdr/",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "programmingLanguage": "Rust",
@@ -176,14 +176,17 @@ meta-->
   </h1>
   <p class="tagline">
     Herder drives a model through native tool calls until the job is done. One
-    agent core — a terminal TUI on top, headless underneath.
+    agent core — a terminal TUI on top, a browser UI beside it, headless
+    underneath.
   </p>
   <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
     Provider-agnostic: any OpenAI-compatible <code>/v1</code> endpoint —
     <a href="/projects/infr/">infr</a>, llama.cpp, OpenAI, OpenRouter — plus a
-    native Anthropic Messages backend with prompt caching and extended thinking.
-    Adaptive tool set + MCP, sub-agents, persistent memory, guardrails that
-    hard-block foot-guns. The vim layer is <a href="/projects/hjkl/">hjkl</a>.
+    native Anthropic Messages backend with prompt caching and extended thinking,
+    and a Codex Responses backend you sign into with a ChatGPT subscription.
+    Adaptive tool set + MCP, sub-agents, skills, persistent memory, an OS
+    sandbox on by default, guardrails that hard-block foot-guns. The vim layer
+    is <a href="/projects/hjkl/">hjkl</a>.
   </p>
 
   <div class="cta">
@@ -238,21 +241,26 @@ command — serializes via serde_json, tests pass.</pre>
       </p>
     </div>
     <div class="feat">
-      <div class="icon">02 — ANTHROPIC</div>
-      <h4>Native Claude backend</h4>
+      <div class="icon">02 — BACKENDS</div>
+      <h4>Claude and Codex, natively</h4>
       <p>
         A native Anthropic Messages API backend, auto-selected for
         <code>api.anthropic.com</code> — unlocking native prompt caching and
-        extended thinking, streamed to the reasoning pane.
+        extended thinking, streamed to the reasoning pane. A Codex Responses
+        backend does the same for a ChatGPT subscription: <code>/login</code>
+        opens a browser OAuth flow instead of asking for an API key.
       </p>
     </div>
     <div class="feat">
       <div class="icon">03 — SURFACES</div>
-      <h4>TUI or headless</h4>
+      <h4>TUI, browser, or headless</h4>
       <p>
-        A UI-agnostic core (<code>hrdr-app</code>) drives the ratatui TUI, and
+        A UI-agnostic core (<code>hrdr-app</code>) drives the ratatui TUI;
+        <code>hrdr serve</code> puts the same session behind an HTTP+WebSocket
+        API with an optional Dioxus WASM SPA (token auth on loopback by default,
+        HTTP Basic or a SQLite user store with TLS for remote); and
         <code>hrdr run --json</code> goes headless — NDJSON events for scripting
-        and CI, same agent underneath.
+        and CI. Same agent underneath.
       </p>
     </div>
     <div class="feat">
@@ -261,22 +269,28 @@ command — serializes via serde_json, tests pass.</pre>
       <p>
         <code>read</code>, <code>write</code>, <code>edit</code>,
         <code>replace</code> (project-wide substitution with a diff and a
-        <code>dry_run</code>),
-        <code>move</code>/<code>copy</code>/<code>delete</code>,
-        <code>find</code>, <code>ls</code>, <code>tree</code>,
-        <code>grep</code>, read-only <code>git</code>, <code>todo</code>,
-        <code>fetch</code>, <code>search</code>, a shell — plus any MCP server's
-        tools. Presence-aware: the model is only offered tools it can actually
-        run, and read tools keep credential files off-limits.
+        <code>dry_run</code>), <code>todo</code>, <code>verify</code>,
+        <code>fetch</code>, <code>search</code>, <code>memory</code>,
+        <code>skill</code>, a shell — plus any MCP server's tools. Deliberately
+        small: a dedicated tool earns its place only when it carries a guarantee
+        the shell cannot, so <code>mv</code>/<code>cp</code>/<code>rm</code> and
+        <code>rg</code> stay shell commands (<code>grep</code>,
+        <code>find</code>, <code>ls</code> and <code>tree</code> survive only in
+        the shell-less <code>jail</code> mode). Presence-aware: the model is
+        only offered tools it can actually run, and read tools keep credential
+        files off-limits. After every edit the file's language server hands its
+        errors straight back with the tool result.
       </p>
     </div>
     <div class="feat">
       <div class="icon">05 — DELEGATE</div>
       <h4>Sub-agents</h4>
       <p>
-        The <code>task</code> tool spawns sub-agents with their own context — in
-        parallel, or detached in the background. Cross-provider profiles let an
-        Opus main agent delegate to a cheaper model.
+        The <code>task</code> tool spawns sub-agents with their own context.
+        Every one runs detached — the call returns a task id at once, several
+        run in parallel, and a finished result is delivered back into the
+        conversation, waking an idle agent. Cross-provider profiles let an Opus
+        main agent delegate to a cheaper model.
       </p>
     </div>
     <div class="feat">
@@ -300,11 +314,13 @@ command — serializes via serde_json, tests pass.</pre>
     </div>
     <div class="feat">
       <div class="icon">08 — CONTEXT</div>
-      <h4>Context under control</h4>
+      <h4>Context and spend under control</h4>
       <p>
         Prompt-cache breakpoints across turns, tool-output pruning before each
         request, and auto-compaction when the window fills — recent turns kept
-        verbatim. All tunable in <code>config.toml</code>.
+        verbatim. A <code>max_cost</code> cap (or <code>run --max-cost</code>)
+        stops the session before the next call once estimated spend, sub-agents
+        included, reaches your ceiling. All tunable in <code>config.toml</code>.
       </p>
     </div>
     <div class="feat">
@@ -316,12 +332,40 @@ command — serializes via serde_json, tests pass.</pre>
         <code>EditorEngine</code> seam. TUI colors come from any hjkl theme.
       </p>
     </div>
+    <div class="feat">
+      <div class="icon">10 — SANDBOX</div>
+      <h4>Confined by the kernel, on by default</h4>
+      <p>
+        Writes are held inside the working directory by a path guard on the file
+        tools plus kernel confinement for shell children — Landlock on Linux,
+        Seatbelt on macOS. Four modes: <code>write</code> (the default, package
+        caches granted so <code>cargo build</code> still works),
+        <code>read</code>, <code>jail</code> (no shell, no network tools, reads
+        limited to one directory — for auditing code you don't trust), and
+        <code>none</code>. Reads stay broad on purpose. A machine with no
+        backend is told so rather than pretending.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">11 — SKILLS</div>
+      <h4>Reusable procedures</h4>
+      <p>
+        A skill is a Markdown prompt template invoked with
+        <code>:name args</code> — ten ship built in (<code>:review</code>,
+        <code>:audit</code>, <code>:commit</code>, <code>:test</code>,
+        <code>:plan</code>, <code>:release</code> and more), and your own land
+        in <code>.hrdr/skills/</code> or the Claude Code / opencode command
+        directories. The model can reach for one itself through the
+        <code>skill</code> tool; mark a skill
+        <code>model_invocable: false</code> and only you can start it.
+      </p>
+    </div>
   </div>
 </section>
 
 <section id="agents">
   <h2>agents</h2>
-  <h3>Four built-ins. Or bring your own as Markdown files.</h3>
+  <h3>Six built-ins. Or bring your own as Markdown files.</h3>
   <p style="color: var(--fg-muted); margin: 0 0 24px">
     Selected with the <code>task</code> tool's <code>agent</code> argument,
     <code>@name</code>-mentioned in a message, or run as the main loop with
@@ -348,10 +392,28 @@ command — serializes via serde_json, tests pass.</pre>
     </div>
     <div class="agent">
       <div class="agent-name">plan</div>
-      <div class="agent-scope">markdown-only writes</div>
+      <div class="agent-scope">read-only</div>
       <p class="agent-desc">
-        Planner — investigates read-only, then writes a step-by-step plan to
-        disk as a Markdown file.
+        Planner — investigates read-only, then returns a concrete, step-by-step
+        implementation plan in its report. Changes nothing.
+      </p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">coder</div>
+      <div class="agent-scope">write-capable</div>
+      <p class="agent-desc">
+        Implementer — hand it a precise spec (exact files, symbols, before →
+        after) and it implements that, verifies, and commits. No scope creep.
+      </p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">prisoner</div>
+      <div class="agent-scope">read-only · jailed</div>
+      <p class="agent-desc">
+        Audits code you do <em>not</em> trust under
+        <code>sandbox = "jail"</code> — no shell, no network, reads confined to
+        the directory you hand it. Injection-resistant, and it overrides the
+        session's mode, <code>--yolo</code> included.
       </p>
     </div>
     <div class="agent">
