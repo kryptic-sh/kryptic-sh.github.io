@@ -1,0 +1,344 @@
+<!--meta
+{
+  "slug": "tmxr",
+  "repo": "tmxr",
+  "title": "tmxr — a tmux-style terminal multiplexer for Linux, macOS and Windows. Rust.",
+  "description": "tmxr — a tmux-style terminal multiplexer in Rust that runs natively on Linux, macOS and Windows. tmux's commands, key names and formats; detachable sessions on a long-lived server; vim / hjkl navigation, fuzzy pickers, session save and restore, and a Tokyo Night status line.",
+  "keywords": "tmxr, tmux alternative, tmux for windows, terminal multiplexer, rust, conpty, sessions, panes, windows, tmux-resurrect, vim-tmux-navigator, hjkl, tokyo night, kryptic",
+  "accent": "#9ece6a",
+  "og_image": "/og-image.png",
+  "nav": [
+    { "href": "#why", "label": "why" },
+    { "href": "#commands", "label": "commands" },
+    { "href": "#install", "label": "install" },
+    {
+      "href": "https://github.com/kryptic-sh/tmxr/blob/main/CHANGELOG.md",
+      "label": "changelog"
+    },
+    { "href": "https://github.com/kryptic-sh/tmxr", "label": "github" }
+  ],
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "tmxr",
+    "description": "A tmux-style terminal multiplexer for Linux, macOS and Windows: tmux's command language and key binds, detachable sessions on a long-lived server, session save and restore.",
+    "url": "https://www.kryptic.sh/projects/tmxr/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Rust",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/kryptic-sh/tmxr",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
+meta-->
+<!--head-->
+<style>
+  :root {
+    --accent: #9ece6a;
+    --accent-dim: #4d6b33;
+    --accent-ink: #101a08;
+    --accent-hover: #b9e08f;
+  }
+  body {
+    background-image:
+      radial-gradient(
+        circle at 18% 0%,
+        rgba(158, 206, 106, 0.07),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 82% 18%,
+        rgba(122, 162, 247, 0.05),
+        transparent 45%
+      );
+  }
+  h1 .grad {
+    background: linear-gradient(
+      120deg,
+      var(--accent) 0%,
+      var(--teal) 50%,
+      var(--cyan) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* command table */
+  .cmds {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .cmds td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmds tr:last-child td {
+    border-bottom: 0;
+  }
+  .cmds td:first-child {
+    color: var(--accent);
+    white-space: nowrap;
+    width: 1%;
+  }
+  .cmds td:last-child {
+    color: var(--fg-dim);
+    font-family: var(--sans);
+  }
+  .table-wrap {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+</style>
+<!--/head-->
+<!--body-->
+<header class="hero">
+  <div class="badges">
+    <span class="badge live">● <span data-version="tmxr">…</span></span>
+    <span class="badge">MIT</span>
+    <span class="badge">Rust</span>
+    <span class="badge">Linux · macOS · Windows</span>
+  </div>
+  <h1>
+    tmux, everywhere,<br />
+    <span class="grad">Windows included.</span>
+  </h1>
+  <p class="tagline">
+    A tmux-style terminal multiplexer that runs natively on Linux, macOS and
+    Windows.
+  </p>
+  <p class="tagline" style="color: var(--fg-muted); font-size: 16px">
+    tmux's command language, key names and formats, so
+    <code>split-window -h -c '#{pane_current_path}'</code> means what it means
+    in tmux. Detachable sessions on a long-lived server, vim / hjkl navigation,
+    fuzzy pickers and session save / restore built in.
+  </p>
+
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/kryptic-sh/tmxr"
+      >view on github →</a
+    >
+    <a class="btn" href="#install">install ↓</a>
+  </div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">tmxr — sessions</span>
+    </div>
+    <pre><span class="ok">$</span> tmxr new -s work
+<span class="dim">  … prefix % to split, prefix c for a window, prefix d to detach</span>
+<span class="ok">$</span> tmxr ls
+work: 3 windows
+<span class="ok">$</span> tmxr attach -t work
+<span class="ok">$</span> tmxr split-window -h -c <span class="str">'#{pane_current_path}'</span>
+<span class="ok">$</span> tmxr resurrect-save
+<span class="dim">  … reboot …</span>
+<span class="ok">$</span> tmxr
+<span class="dim">  sessions restored, programs and directories included</span></pre>
+  </div>
+</header>
+
+<section id="why">
+  <h2>why</h2>
+  <h3>Your tmux habits, on every machine you use.</h3>
+  <div class="grid">
+    <div class="feat">
+      <div class="icon">01 — MODEL</div>
+      <h4>Server and clients</h4>
+      <p>
+        A long-lived server owns every session, window, pane and program; clients
+        attach from any terminal and detach without killing anything. The server
+        starts on demand. openpty and Unix sockets on Linux and macOS; ConPTY and
+        an owner-only named pipe on Windows.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">02 — TMUX</div>
+      <h4>tmux's language</h4>
+      <p>
+        Commands, flags, aliases and unambiguous prefixes (<code>tmxr ls</code>,
+        <code>tmxr a</code>), key names, <code>#{formats}</code> and targets, on
+        the command line, in binds and at the <code>prefix :</code> prompt.
+        <code>tmxr list-commands</code> lists them.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">03 — BINDS</div>
+      <h4>An opinionated tmux setup</h4>
+      <p>
+        vim-style pane selection, splits and windows in the current directory,
+        <code>M-h</code> / <code>M-l</code> through windows, synchronized panes,
+        tmux-sensible and tmux-yank binds plus tmux's own defaults.
+        <code>prefix ?</code> lists every bind with a note.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">04 — NAV</div>
+      <h4>vim / hjkl navigation built in</h4>
+      <p>
+        <code>C-h/j/k/l</code> move between panes, or go to the program in front
+        when it is vim, hjkl or fzf — vim-tmux-navigator without the plugin. For
+        nvim,
+        <a href="https://github.com/kryptic-sh/tmxr-navigator.nvim"
+          >tmxr-navigator.nvim ↗</a
+        >
+        hands the keys back at nvim's edge.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">05 — COPY</div>
+      <h4>Copy mode, vi or emacs</h4>
+      <p>
+        tmux's vi and emacs copy tables, incremental search, counts, jumps,
+        marks, brackets and paragraphs; copy to buffers, OSC 52 and the local
+        clipboard, or pipe a selection to a command.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">06 — PICK</div>
+      <h4>Fuzzy pickers</h4>
+      <p>
+        Sessions, windows and paste buffers through
+        <code>hjkl-picker</code>, with the highlighted session's pane previewed
+        below the list. Kill, rename or create a session from the picker.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">07 — SAVE</div>
+      <h4>Save and restore</h4>
+      <p>
+        tmux-resurrect built in: layouts, directories and allowlisted programs
+        with their arguments, auto-saved, restored when the server starts, and
+        saved when the system stops the server (SIGTERM / SIGHUP, Windows
+        logoff).
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">08 — MOUSE</div>
+      <h4>Mouse keys, rebindable</h4>
+      <p>
+        Click to focus, drag borders, wheel into copy mode, drag or
+        double-click to copy, all as tmux's mouse keys
+        (<code>MouseDown1Pane</code>, <code>WheelUpPane</code>, …) you can
+        rebind or unbind.
+      </p>
+    </div>
+    <div class="feat">
+      <div class="icon">09 — LOOK</div>
+      <h4>Tokyo Night status line</h4>
+      <p>
+        The catppuccin layout in Tokyo Night colours, built from tmux formats you
+        can restyle. Inline images pass through to the outer terminal (tmux's
+        <code>allow-passthrough</code>), on Windows too.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <h2>commands</h2>
+  <h3>The tmux you already type.</h3>
+  <div class="table-wrap">
+    <table class="cmds">
+      <tr>
+        <td>tmxr</td>
+        <td>new session, or attach to restored ones</td>
+      </tr>
+      <tr>
+        <td>tmxr new -s &lt;name&gt;</td>
+        <td>a named session</td>
+      </tr>
+      <tr>
+        <td>tmxr attach -t &lt;name&gt;</td>
+        <td>attach; <code>prefix d</code> detaches</td>
+      </tr>
+      <tr>
+        <td>tmxr ls</td>
+        <td>list sessions</td>
+      </tr>
+      <tr>
+        <td>tmxr -L &lt;label&gt;</td>
+        <td>a separate server with its own sessions and saves</td>
+      </tr>
+      <tr>
+        <td>tmxr &lt;command&gt;</td>
+        <td>
+          any tmux command, from a pane too (<code>$TMXR</code> names its
+          server)
+        </td>
+      </tr>
+      <tr>
+        <td>tmxr list-commands</td>
+        <td>every command and its flags</td>
+      </tr>
+      <tr>
+        <td>tmxr kill-server</td>
+        <td>end the server, saving the sessions first</td>
+      </tr>
+    </table>
+  </div>
+  <p class="install-note" style="margin-top: 24px">
+    Settings and binds live in <code>~/.config/tmxr/config.toml</code> on every
+    OS, layered over the defaults; binds are tmux command strings, keys tmux's
+    names or hjkl's.
+  </p>
+</section>
+
+<section id="install">
+  <h2>install</h2>
+  <h3>Every channel drops a <code>tmxr</code> on your <code>$PATH</code>.</h3>
+  <p class="install-note">
+    The <code>tmxr</code> name on crates.io belongs to another project, so the
+    crate is <code>tmxr-cli</code>; it installs the <code>tmxr</code> binary.
+    The Windows release and Scoop package carry Microsoft's ConPTY beside
+    <code>tmxr.exe</code>, which inline images need there.
+  </p>
+  <div class="cta">
+    <a
+      class="btn primary"
+      href="https://github.com/kryptic-sh/tmxr/releases/latest"
+      >latest release →</a
+    >
+    <a class="btn" href="https://github.com/kryptic-sh/homebrew-tap"
+      >Homebrew (kryptic-sh/tap) ↗</a
+    >
+    <a class="btn" href="https://github.com/kryptic-sh/scoop-bucket"
+      >Scoop bucket ↗</a
+    >
+  </div>
+  <div class="terminal install-sample">
+    <div class="bar">
+      <span class="dot r"></span><span class="dot y"></span
+      ><span class="dot g"></span>
+      <span class="title">tmxr — package managers</span>
+    </div>
+    <pre class="install-code"><span class="cm"># Arch (AUR)</span>
+<span class="ok">$</span> paru -S tmxr-bin
+
+<span class="cm"># macOS (Homebrew tap)</span>
+<span class="ok">$</span> brew install kryptic-sh/tap/tmxr
+
+<span class="cm"># Windows (Scoop)</span>
+<span class="ok">$</span> scoop bucket add kryptic-sh https://github.com/kryptic-sh/scoop-bucket
+<span class="ok">$</span> scoop install tmxr
+
+<span class="cm"># any platform (crates.io)</span>
+<span class="ok">$</span> cargo install tmxr-cli
+
+<span class="cm"># Debian/Ubuntu, Fedora, Alpine: .deb / .rpm / .apk on the release page</span></pre>
+  </div>
+</section>
+<!--/body-->

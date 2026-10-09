@@ -3,7 +3,7 @@
   "slug": "",
   "title": "kryptic.sh — native, vim-shaped, Rust-built tools",
   "description": "Native software tools for people who never left the terminal. Vim-shaped, Rust-built. No Electron. No JVM. No bullshit.",
-  "keywords": "kryptic, vim, rust, terminal, tui, sql client, browser, modal editor, picker, launcher, rofi, dotfiles manager, sqeel, buffr, hjkl, inbx, hodl, pikr, gpur, hrdr, infr, krypt",
+  "keywords": "kryptic, vim, rust, terminal, tui, sql client, browser, modal editor, picker, launcher, rofi, dotfiles manager, sqeel, buffr, hjkl, inbx, hodl, pikr, gpur, hrdr, infr, krypt, tmxr, tmux alternative, terminal multiplexer",
   "accent": "#ff9e64",
   "og_image": "/og-image.png",
   "nav": [
@@ -109,6 +109,9 @@ meta-->
   .proj.krypt {
     --c: var(--cyan);
   }
+  .proj.tmxr {
+    --c: var(--green);
+  }
   .proj-head {
     display: flex;
     align-items: baseline;
@@ -202,6 +205,7 @@ meta-->
 <span class="dim">drwx</span>  <span class="c-orange">hrdr/</span>    <span class="dim">agentic coding harness · herder</span>      <span class="ok" data-version="hrdr" data-pad="13">…</span>
 <span class="dim">drwx</span>  <span class="c-purple">infr/</span>    <span class="dim">LLM inference engine · Vulkan</span>        <span class="ok" data-version="infr" data-pad="13">wip</span>
 <span class="dim">drwx</span>  <span class="c-cyan">krypt/</span>   <span class="dim">dotfiles manager · config-driven</span>     <span class="ok" data-version="krypt" data-pad="13">…</span>
+<span class="dim">drwx</span>  <span class="c-green">tmxr/</span>    <span class="dim">tmux-style terminal multiplexer</span>      <span class="ok" data-version="tmxr" data-pad="13">…</span>
 
 <span class="ok">$</span> cat principles.txt
 <span class="cm"># native rust · modal editing · mouse + keyboard · zero telemetry</span></pre>
@@ -397,6 +401,24 @@ meta-->
       <div class="proj-links">
         <a href="/projects/krypt/">site →</a>
         <a class="muted" href="https://github.com/kryptic-sh/krypt">github ↗</a>
+      </div>
+    </article>
+
+    <article class="proj tmxr">
+      <div class="proj-head">
+        <span class="proj-name">tmxr</span>
+        <span class="proj-status" data-version="tmxr">…</span>
+      </div>
+      <p class="proj-tag">tmux-style terminal multiplexer.</p>
+      <p class="proj-desc">
+        tmux on Linux, macOS, and Windows, natively: tmux's command language,
+        key names and formats, detachable sessions on a long-lived server.
+        vim / hjkl pane navigation built in, fuzzy session and window pickers,
+        tmux-resurrect-style save and restore, a Tokyo Night status line.
+      </p>
+      <div class="proj-links">
+        <a href="/projects/tmxr/">site →</a>
+        <a class="muted" href="https://github.com/kryptic-sh/tmxr">github ↗</a>
       </div>
     </article>
   </div>
